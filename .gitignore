@@ -41,9 +41,19 @@ ENV/
 .ipynb_checkpoints
 
 # Data files (large datasets)
-data/*.csv
-data/*.json
-data/*.parquet
+data/
+data/**/*
+*.csv
+*.json
+*.parquet
+*.dbf
+*.shp
+*.shx
+*.prj
+*.cpg
+
+# Large notebook files
+notebook/geodata_tutorial.ipynb
 
 # Generated outputs
 *.html
