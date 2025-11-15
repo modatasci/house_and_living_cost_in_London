@@ -1,50 +1,54 @@
 ## London Housing Cost Visualization - Project Plan
 
-### Phase 1: Data Collection & Preparation
-1. **Acquire datasets**:
+
+### Phase 1: Early Functionality
+**A. Travel cost calculator**
+   - A simple UI where user can calculate the travel cost between their home and workplace
+   - Deployment in Streamlit 
+   - Data source: TfL transport api
+   - Cost calculator -> route_calculator.py
+
+**B. Inclusion of concil tax and average rent cost in**
+
+  **B.1 Acquire datasets**:
    - London postcode boundaries (GeoJSON/Shapefile from OS Open Data or London Datastore)
    - Average rent per square meter by postcode/borough
    - Council tax data by borough
-   - TfL transport zones and travel cost data
    - London postcode coordinates
 
-2. **Data cleaning & integration**:
+ **B.2 Data cleaning & integration**:
    - Merge datasets on postcode/borough
    - Handle missing values
    - Calculate derived metrics
    - Export to clean CSV/JSON format
 
-### Phase 2: Core Functionality Development
-3. **Build geospatial components**:
-   - Create interactive London map using Folium or Plotly
-   - Add postcode boundary overlays
-   - Implement color-coding by cost metrics
+### Phase 2: Optimization of best accomodation location
 
-4. **Implement cost calculation logic**:
-   - Travel cost calculator (between home and work postcodes using TfL zones/distance)
-   - Rent cost per square meter lookup
-   - Council tax lookup by borough
-   - Total monthly cost aggregation function
-
-5. **Build Streamlit UI**:
+**C. Build Interactive map visualization Streamlit UI**:
    - Postcode selection inputs (home & work)
    - Interactive map visualization
    - Cost breakdown display (rent, travel, council tax, total)
    - Filter/toggle options (property size, travel mode)
 
+   **C.1 Build geospatial components**:
+   - Create interactive London map using Folium or Plotly
+   - Add postcode boundary overlays
+   - Implement color-coding by cost metrics
+
+
 ### Phase 3: Refinement & Deployment
-6. **Add enhancements**:
+**D. Add enhancements**:
    - Comparison mode (multiple postcodes)
    - Affordability heatmap overlay
    - Data visualizations (charts for cost breakdown)
 
-7. **Prepare for deployment**:
+**E. Prepare for deployment**:
    - Create requirements.txt
    - Optimize data loading (caching)
    - Add documentation/README
    - Test locally
 
-8. **Deploy to Streamlit Cloud**:
+**F. Deploy to Streamlit Cloud**:
    - Push to GitHub repository
    - Connect to Streamlit Cloud
    - Configure deployment settings
