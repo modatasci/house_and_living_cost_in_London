@@ -221,30 +221,72 @@ class TravelCalculator:
 
             journeys = data.get('journeys', [])
 
-            # Filter out duplicate routes (same start and end stations)ß
+            # # Filter out duplicate routes (same start and end stations)ß
+            # if journeys:
+            #     filtered_journeys = []
+            #     seen_routes = set()  # Track unique start-end combinations
+
+            #     for journey in journeys:
+            #         legs = journey.get('legs', [])
+            #         if legs and len(legs) > 0:
+            #             first_leg = legs[1]
+            #             last_leg = legs[1]
+
+            #             start_station = first_leg.get('departurePoint', {}).get('commonName', '').strip()
+            #             end_station = last_leg.get('arrivalPoint', {}).get('commonName', '').strip()
+
+            #             # Create a unique key for this route
+            #             route_key = (start_station.lower(), end_station.lower())
+
+            #             # Only include if we haven't seen this start-end combination before
+            #             if route_key not in seen_routes:
+            #                 seen_routes.add(route_key)
+            #                 filtered_journeys.append(journey)
+            #         else:
+            #             filtered_journeys.append(journey)
+
+            #     return filtered_journeys if filtered_journeys else None
+            # Filter out duplicate routes (same route details)
             if journeys:
                 filtered_journeys = []
-                seen_routes = set()  # Track unique start-end combinations
+                seen_routes = set()  # Track unique route fingerprints
 
                 for journey in journeys:
                     legs = journey.get('legs', [])
                     if legs and len(legs) > 0:
-                        first_leg = legs[1]
-                        last_leg = legs[1]
-
-                        start_station = first_leg.get('departurePoint', {}).get('commonName', '').strip()
-                        end_station = last_leg.get('arrivalPoint', {}).get('commonName', '').strip()
-
-                        # Create a unique key for this route
-                        route_key = (start_station.lower(), end_station.lower())
-
-                        # Only include if we haven't seen this start-end combination before
+                        # Create a unique fingerprint based on the entire route
+                        route_fingerprint = []
+                        
+                        for leg in legs:
+                            mode = leg.get('mode', {}).get('name', '')
+                            dep_point = leg.get('departurePoint', {}).get('commonName', '')
+                            arr_point = leg.get('arrivalPoint', {}).get('commonName', '')
+                            
+                            # Get route/line name if available (e.g., "Central Line", "Bus 25")
+                            route_options = leg.get('routeOptions', [])
+                            route_name = route_options[0].get('name', '') if route_options else ''
+                            
+                            # Add to fingerprint: mode, route/line, departure, arrival
+                            route_fingerprint.append((
+                                mode.lower(),
+                                route_name.lower(),
+                                dep_point.lower().strip(),
+                                arr_point.lower().strip()
+                            ))
+                        
+                        # Convert to tuple (hashable) for set membership
+                        route_key = tuple(route_fingerprint)
+                        
+                        # Only include if we haven't seen this exact route before
                         if route_key not in seen_routes:
                             seen_routes.add(route_key)
                             filtered_journeys.append(journey)
+                    else:
+                        # Keep journeys without legs (edge case)
+                        filtered_journeys.append(journey)
 
                 return filtered_journeys if filtered_journeys else None
-
+            
             return None
 
         except requests.exceptions.RequestException as e:

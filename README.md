@@ -38,6 +38,10 @@ A comprehensive travel planning tool with the following capabilities:
 - **Haversine Distance**: Calculate straight-line distances between points
 - **Journey Caching**: Automatically caches the last journey for reuse
 
+### Council Tax
+- Source:  https://data.london.gov.uk/dataset/council-tax-charges-bands-borough-expnl/
+### Average rent
+- Source: https://www.ons.gov.uk/economy/inflationandpriceindices/adhocs/2923privaterentalmarketinlondonjuly2024tojune2025
 ## Installation
 
 ### Prerequisites

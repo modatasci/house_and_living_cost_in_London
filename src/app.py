@@ -5,6 +5,8 @@ Allows users to calculate commute routes and costs between postcodes
 
 import streamlit as st
 from route_calculator import TravelCalculator
+from get_living_cost import CouncilTaxLookup
+from get_living_cost import AverageRentCost
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -12,10 +14,21 @@ load_dotenv()
 
 # Page configuration
 st.set_page_config(
-    page_title="London Commute Calculator",
-    page_icon="🚇",
+    page_title="Where to live in London?",
+    page_icon="🏠",
     layout="wide"
 )
+
+# Cache the lookup instances
+@st.cache_resource
+def get_council_tax_lookup():
+    """Initialize and return CouncilTaxLookup instance"""
+    return CouncilTaxLookup()
+
+@st.cache_resource
+def get_rent_lookup():
+    """Initialize and return AverageRentCost instance"""
+    return AverageRentCost()
 
 # Initialize calculator in session state
 if 'calculator' not in st.session_state:
@@ -24,10 +37,14 @@ if 'journey_result' not in st.session_state:
     st.session_state.journey_result = None
 if 'all_journeys' not in st.session_state:
     st.session_state.all_journeys = None
+if 'council_tax_data' not in st.session_state:
+    st.session_state.council_tax_data = None
+if 'rent_data' not in st.session_state:
+    st.session_state.rent_data = None
 
 # Title and description
-st.title("🚇 London Commute Calculator")
-st.markdown("Calculate travel routes, times, and costs between London postcodes")
+st.title("🏠 Where to live in London?")
+st.markdown("Calculate travel costs, council tax, and rent prices between London postcodes")
 
 # Sidebar for inputs
 with st.sidebar:
@@ -41,7 +58,7 @@ with st.sidebar:
     ).strip()
 
     to_postcode = st.text_input(
-        "To (Office Postcode)",
+        "To (Office/School Postcode)",
         value="EC2Y 5BL",
         placeholder="e.g., E1 6AN"
     ).strip()
@@ -49,7 +66,7 @@ with st.sidebar:
     st.divider()
 
     # Advanced options
-    with st.expander("Advanced Options"):
+    with st.expander("Journey Planner Advanced Options"):
         transport_mode = st.selectbox(
             "Transport Mode",
             ["All modes", "Tube only", "Bus only", "Walking"],
@@ -80,8 +97,29 @@ with st.sidebar:
 
     st.divider()
 
+    # Housing details
+    st.subheader("Housing Details")
+
+    # Council Tax Band selector
+    council_tax_band = st.selectbox(
+        "Council Tax Band",
+        ["A", "B", "C", "D", "E", "F", "G", "H"],
+        index=3,  # Default to Band D
+        help="Select your property's council tax band"
+    )
+
+    # Bedroom category selector for rent
+    bedroom_category = st.selectbox(
+        "Bedroom Category",
+        ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"],
+        index=2,  # Default to One Bedroom
+        help="Select bedroom category for average rent calculation"
+    )
+
+    st.divider()
+
     # Calculate button
-    calculate_button = st.button("🔍 Calculate Route", type="primary", use_container_width=True)
+    calculate_button = st.button("🔍 Calculate Costs", type="primary", use_container_width=True)
 
 # Main content area
 if calculate_button:
@@ -120,70 +158,233 @@ if calculate_button:
                 st.session_state.journey_result = None
                 st.session_state.all_journeys = None
 
+        # Calculate council tax for home postcode
+        with st.spinner("Calculating council tax..."):
+            try:
+                council_tax_lookup = get_council_tax_lookup()
+                council_tax_monthly = council_tax_lookup.calculate_monthly_council_tax(from_postcode)
+
+                if council_tax_monthly:
+                    st.session_state.council_tax_data = {
+                        'borough': council_tax_monthly.get('Local authority'),
+                        'band': council_tax_band,
+                        'monthly': council_tax_monthly.get(f'Band {council_tax_band}', 0),
+                        'annual': council_tax_monthly.get(f'Band {council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {council_tax_band}') else 0,
+                        'all_bands': council_tax_monthly
+                    }
+                else:
+                    st.warning(f"Could not find council tax data for postcode: {from_postcode}")
+                    st.session_state.council_tax_data = None
+            except Exception as e:
+                st.error(f"Error calculating council tax: {str(e)}")
+                st.session_state.council_tax_data = None
+
+        # Calculate average rent for home postcode
+        with st.spinner("Calculating average rent..."):
+            try:
+                rent_lookup = get_rent_lookup()
+                rent_info = rent_lookup.get_average_rent_by_postcode(
+                    from_postcode,
+                    bedroom_category=bedroom_category,
+                    use_median=True
+                )
+
+                if rent_info:
+                    st.session_state.rent_data = {
+                        'borough': rent_info.get('borough'),
+                        'postcode': from_postcode,
+                        'bedroom_category': bedroom_category,
+                        'monthly_rent': rent_info.get('monthly_rent', 0),
+                        'annual_rent': rent_info.get('annual_rent', 0),
+                        'lower_quartile': rent_info.get('lower_quartile'),
+                        'upper_quartile': rent_info.get('upper_quartile'),
+                        'all_categories': rent_lookup.get_all_bedroom_categories(from_postcode)
+                    }
+                else:
+                    st.warning(f"Could not find rent data for postcode: {from_postcode}")
+                    st.session_state.rent_data = None
+            except Exception as e:
+                st.error(f"Error calculating rent: {str(e)}")
+                st.session_state.rent_data = None
+
 # Display results
 if st.session_state.journey_result and st.session_state.journey_result.get('success'):
     journey = st.session_state.journey_result
 
-    # Journey options selector
-    if st.session_state.all_journeys and len(st.session_state.all_journeys) > 1:
-        st.subheader("Journey Options")
+    # Display journey route summary
+    st.markdown("---")
+    route_header_col1, route_header_col2, route_header_col3 = st.columns([1, 0.3, 1])
 
-        # Create option labels
-        option_labels = []
-        for i, j in enumerate(st.session_state.all_journeys, 1):
-            duration = j.get('duration', 0)
-            fare = st.session_state.calculator._extract_fare(j)
-            fare_str = f"£{fare.get('total_cost', 0):.2f}" if fare.get('total_cost') else "N/A"
-            legs = j.get('legs', [])
+    with route_header_col1:
+        # Get borough for "from" location
+        from_borough = "Unknown"
+        if st.session_state.council_tax_data:
+            from_borough = st.session_state.council_tax_data.get('borough', 'Unknown')
+        elif st.session_state.rent_data:
+            from_borough = st.session_state.rent_data.get('borough', 'Unknown')
+        # # Get borough for "to" location - currently does not work because we don't fetch council tax or rent for "to" postcode
+        # to_borough = "Unknown"
+        # if st.session_state.council_tax_data:
+        #     to_borough = st.session_state.council_tax_data.get('borough', 'Unknown')
+        # elif st.session_state.rent_data:
+        #     to_borough = st.session_state.rent_data.get('borough', 'Unknown')
 
-            # Build route summary with stations and lines
-            route_parts = []
-            for leg in legs:
-                mode_name = leg.get('mode', {}).get('name', 'unknown')
+        st.markdown(f"""
+        ### 🏠 From
+        **Postcode:** {from_postcode}
+        **Borough:** {from_borough}
+        """)
 
-                # Get line name if available
-                route_options = leg.get('routeOptions', [])
-                line_name = route_options[0].get('name', '') if route_options else ''
+    with route_header_col2:
+        st.markdown("<div style='text-align: center; padding-top: 30px; font-size: 24px;'>→</div>", unsafe_allow_html=True)
 
-                if mode_name in ['tube', 'bus', 'overground', 'dlr', 'tram', 'national-rail']:
-                    if line_name:
-                        route_parts.append(line_name)
-                    else:
-                        route_parts.append(mode_name.title())
-                elif mode_name == 'walking' and len(legs) > 1:
-                    # Only show walking if it's part of a multi-leg journey
-                    continue
+    with route_header_col3:
+        st.markdown(f"""
+        ### 🏢 To
+        **Postcode:** {to_postcode}
+        """)
 
-            route_summary = " → ".join(route_parts) if route_parts else "Walking only"
+    st.markdown("---")
 
-            option_labels.append(f"Option {i}: {duration} min | {fare_str} | {route_summary}")
+    #-------------------------------------------------------------------------------------------------------------------------
+    # region Journey options and council tax band selectors
+    selector_col1, selector_col2 = st.columns([2, 1])
 
-        selected_option = st.selectbox(
-            "Choose your preferred route:",
-            options=range(len(st.session_state.all_journeys)),
-            format_func=lambda x: option_labels[x],
-            key="journey_selector"
-        )
+    with selector_col1:
+        # Journey options selector
+        if st.session_state.all_journeys and len(st.session_state.all_journeys) > 1:
+            st.subheader("Journey Options")
 
-        # Update selected journey
-        selected_journey = st.session_state.all_journeys[selected_option]
-        st.session_state.journey_result = {
-            'success': True,
-            'duration_minutes': selected_journey.get('duration', 0),
-            'arrival_time': selected_journey.get('arrivalDateTime'),
-            'start_time': selected_journey.get('startDateTime'),
-            'legs': len(selected_journey.get('legs', [])),
-            'fare': st.session_state.calculator._extract_fare(selected_journey),
-            'raw_data': selected_journey
-        }
-        st.session_state.calculator.last_journey = st.session_state.journey_result
-        journey = st.session_state.journey_result
+            # Create option labels
+            option_labels = []
+            for i, j in enumerate(st.session_state.all_journeys, 1):
+                duration = j.get('duration', 0)
+                fare = st.session_state.calculator._extract_fare(j)
+                fare_str = f"£{fare.get('total_cost', 0):.2f}" if fare.get('total_cost') else "N/A"
+                legs = j.get('legs', [])
 
-    # Key metrics
-    col1, col2, col3, col4 = st.columns(4)
+                # Build route summary with stations and lines
+                route_parts = []
+                for leg in legs:
+                    mode_name = leg.get('mode', {}).get('name', 'unknown')
+
+                    # Get line name if available
+                    route_options = leg.get('routeOptions', [])
+                    line_name = route_options[0].get('name', '') if route_options else ''
+
+                    if mode_name in ['tube', 'bus', 'overground', 'dlr', 'tram', 'national-rail']:
+                        if line_name:
+                            route_parts.append(line_name)
+                        else:
+                            route_parts.append(mode_name.title())
+                    elif mode_name == 'walking' and len(legs) > 1:
+                        # Only show walking if it's part of a multi-leg journey
+                        continue
+
+                route_summary = " → ".join(route_parts) if route_parts else "Walking only"
+
+                option_labels.append(f"Option {i}: {duration} min | {fare_str} | {route_summary}")
+
+            selected_option = st.selectbox(
+                "Choose your preferred route:",
+                options=range(len(st.session_state.all_journeys)),
+                format_func=lambda x: option_labels[x],
+                key="journey_selector"
+            )
+
+            # Update selected journey
+            selected_journey = st.session_state.all_journeys[selected_option]
+            st.session_state.journey_result = {
+                'success': True,
+                'duration_minutes': selected_journey.get('duration', 0),
+                'arrival_time': selected_journey.get('arrivalDateTime'),
+                'start_time': selected_journey.get('startDateTime'),
+                'legs': len(selected_journey.get('legs', [])),
+                'fare': st.session_state.calculator._extract_fare(selected_journey),
+                'raw_data': selected_journey
+            }
+            st.session_state.calculator.last_journey = st.session_state.journey_result
+            journey = st.session_state.journey_result
+
+    with selector_col2:
+        # Housing selectors (council tax band and bedroom category)
+        if st.session_state.council_tax_data or st.session_state.rent_data:
+            st.subheader("Housing Options")
+
+            # Council tax band selector
+            if st.session_state.council_tax_data:
+                current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+                    st.session_state.council_tax_data.get('band', 'D')
+                )
+
+                selected_band = st.selectbox(
+                    "Council Tax Band:",
+                    ["A", "B", "C", "D", "E", "F", "G", "H"],
+                    index=current_band_index,
+                    key="band_selector",
+                    help="Change council tax band to update calculations"
+                )
+
+                # Update council tax data if band changed
+                if selected_band != st.session_state.council_tax_data.get('band'):
+                    all_bands = st.session_state.council_tax_data.get('all_bands', {})
+                    monthly_amount = all_bands.get(f'Band {selected_band}', 0)
+
+                    st.session_state.council_tax_data['band'] = selected_band
+                    st.session_state.council_tax_data['monthly'] = monthly_amount
+                    st.session_state.council_tax_data['annual'] = monthly_amount * 12
+                    st.rerun()
+
+            # Bedroom category selector
+            if st.session_state.rent_data:
+                bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
+                current_category = st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
+                current_category_index = bedroom_categories.index(current_category) if current_category in bedroom_categories else 2
+
+                selected_category = st.selectbox(
+                    "Bedroom Category:",
+                    bedroom_categories,
+                    index=current_category_index,
+                    key="category_selector",
+                    help="Change bedroom category to update rent"
+                )
+
+                # Update rent data if category changed
+                if selected_category != st.session_state.rent_data.get('bedroom_category'):
+                    all_categories = st.session_state.rent_data.get('all_categories', {})
+                    monthly_rent = all_categories.get(selected_category, 0)
+
+                    st.session_state.rent_data['bedroom_category'] = selected_category
+                    st.session_state.rent_data['monthly_rent'] = monthly_rent
+                    st.session_state.rent_data['annual_rent'] = monthly_rent * 12
+                    st.rerun()
+    # endregion Journey options and housing selectors
+    #-------------------------------------------------------------------------------------------------------------------------
+    # region Key metrics
+
+    st.subheader("💰 Cost Summary")
+
+    # Calculate monthly commute cost
+    monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey)
+    monthly_commute = monthly.get('monthly_cost_with_cap', 0) if monthly.get('success') else 0
+
+    # Get council tax
+    monthly_council_tax = 0
+    if st.session_state.council_tax_data:
+        monthly_council_tax = st.session_state.council_tax_data.get('monthly', 0)
+
+    # Get rent
+    monthly_rent = 0
+    if st.session_state.rent_data:
+        monthly_rent = st.session_state.rent_data.get('monthly_rent', 0)
+
+    # Calculate total monthly cost
+    total_monthly = monthly_commute + monthly_council_tax + monthly_rent
+
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
 
     with col1:
-        st.metric("Duration", f"{journey['duration_minutes']} min")
+        st.metric("Journey Time", f"{journey['duration_minutes']} min")
 
     with col2:
         fare = journey.get('fare', {})
@@ -194,18 +395,142 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             st.metric("Single Fare", "N/A")
 
     with col3:
-        st.metric("Number of Legs", journey['legs'])
+        if monthly_commute > 0:
+            st.metric("Monthly Commute", f"£{monthly_commute:.2f}")
+        else:
+            st.metric("Monthly Commute", "N/A")
 
     with col4:
-        # Calculate monthly cost
-        monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey)
-        if monthly.get('success') and monthly.get('monthly_cost_with_cap', 0) > 0:
-            st.metric("Monthly Cost", f"£{monthly['monthly_cost_with_cap']:.2f}")
+        if monthly_rent > 0:
+            bedroom_cat = st.session_state.rent_data.get('bedroom_category', 'N/A')
+            st.metric(
+                f"Rent ({bedroom_cat})",
+                f"£{monthly_rent:.2f}"
+            )
         else:
-            st.metric("Monthly Cost", "N/A")
+            st.metric("Monthly Rent", "N/A")
+
+    with col5:
+        if monthly_council_tax > 0:
+            st.metric(
+                f"Council Tax (Band {st.session_state.council_tax_data.get('band', 'D')})",
+                f"£{monthly_council_tax:.2f}"
+            )
+        else:
+            st.metric("Council Tax", "N/A")
+
+    with col6:
+        if total_monthly > 0:
+            st.metric("Total Monthly", f"£{total_monthly:.2f}",
+                     help="Commute + Rent + Council Tax")
+        else:
+            st.metric("Total Monthly", "N/A")
 
     st.divider()
+    # endregion Key metrics
+    #-------------------------------------------------------------------------------------------------------------------------
+    # region monthly cost breakdown
+    
+    # Monthly cost breakdown - Three columns
+    col_left, col_middle, col_right = st.columns(3)
 
+    # Commute cost breakdown
+    with col_left:
+        st.subheader("🚇 Commute Cost")
+
+        monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey)
+
+        if monthly.get('success'):
+            st.metric("Daily", f"£{monthly['daily_cost']:.2f}")
+            st.metric("Weekly", f"£{monthly['weekly_cost']:.2f}")
+            st.metric("Monthly", f"£{monthly['monthly_cost']:.2f}")
+            st.metric("Monthly (with cap)", f"£{monthly['monthly_cost_with_cap']:.2f}")
+
+            if monthly.get('warning'):
+                st.caption(monthly['warning'])
+        else:
+            st.error("Could not calculate monthly cost")
+
+    # Rent breakdown
+    with col_middle:
+        st.subheader("🏘️ Average Rent")
+
+        if st.session_state.rent_data:
+            rent_data = st.session_state.rent_data
+
+            st.info(f"**Borough:** {rent_data.get('borough', 'Unknown')}")
+
+            st.metric(
+                f"Monthly ({rent_data.get('bedroom_category', 'N/A')})",
+                f"£{rent_data.get('monthly_rent', 0):.2f}"
+            )
+
+            st.metric(
+                "Annual",
+                f"£{rent_data.get('annual_rent', 0):.2f}"
+            )
+
+            # Show comparison across bedroom categories
+            with st.expander("Compare Categories"):
+                all_categories = rent_data.get('all_categories', {})
+                if all_categories:
+                    category_comparison = []
+                    for category, monthly_price in all_categories.items():
+                        annual_price = monthly_price * 12
+                        category_comparison.append({
+                            'Category': category,
+                            'Monthly': f"£{monthly_price:.2f}"
+                        })
+
+                    if category_comparison:
+                        st.table(category_comparison)
+        else:
+            st.warning("Rent data not available")
+
+    # Council tax breakdown
+    with col_right:
+        st.subheader("🏛️ Council Tax")
+
+        if st.session_state.council_tax_data:
+            ct_data = st.session_state.council_tax_data
+
+            st.info(f"**Borough:** {ct_data.get('borough', 'Unknown')}")
+
+            st.metric(
+                f"Monthly (Band {ct_data.get('band', 'D')})",
+                f"£{ct_data.get('monthly', 0):.2f}"
+            )
+
+            st.metric(
+                "Annual",
+                f"£{ct_data.get('annual', 0):.2f}"
+            )
+
+            # Show comparison across bands
+            with st.expander("Compare Bands"):
+                bands_data = ct_data.get('all_bands', {})
+                if bands_data:
+                    band_comparison = []
+                    for band_key in ['Band A', 'Band B', 'Band C', 'Band D', 'Band E', 'Band F', 'Band G', 'Band H']:
+                        if band_key in bands_data:
+                            band_letter = band_key.split()[1]
+                            monthly_val = bands_data[band_key]
+                            annual_val = monthly_val * 12
+                            band_comparison.append({
+                                'Band': band_letter,
+                                'Monthly': f"£{monthly_val:.2f}"
+                            })
+
+                    if band_comparison:
+                        st.table(band_comparison)
+        else:
+            st.warning("Council tax data not available")
+
+    st.divider()
+    # endregion monthly cost breakdown
+    #-------------------------------------------------------------------------------------------------------------------------
+    # region route details and map
+    
     # Two columns for route details and map
     col1, col2 = st.columns([1, 1])
 
@@ -266,31 +591,8 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             st.warning(f"Could not generate map: {str(e)}")
 
     st.divider()
-
-    # Monthly cost breakdown
-    st.subheader("Monthly Commute Cost")
-
-    monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey)
-
-    if monthly.get('success'):
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            st.metric("Daily Cost", f"£{monthly['daily_cost']:.2f}")
-
-        with col2:
-            st.metric("Weekly Cost", f"£{monthly['weekly_cost']:.2f}")
-
-        with col3:
-            st.metric("Monthly Cost", f"£{monthly['monthly_cost']:.2f}")
-
-        with col4:
-            st.metric("Monthly (with cap)", f"£{monthly['monthly_cost_with_cap']:.2f}")
-
-        if monthly.get('warning'):
-            st.warning(monthly['warning'])
-    else:
-        st.error("Could not calculate monthly cost")
+    # endregion route details and map
+    #-------------------------------------------------------------------------------------------------------------------------
 
 else:
     # Initial state - show instructions
@@ -314,7 +616,6 @@ else:
         **Popular Office Areas:**
         - EC2Y 5BL (Liverpool Street)
         - WC2N 5DU (Trafalgar Square)
-        - E20 2ZQ (Stratford)
         - SE1 9SG (London Bridge)
         """)
 
