@@ -198,7 +198,7 @@ class TravelCalculator:
         # Build params
         params = {
             'app_key': self.tfl_app_key,
-            # 'timeIs': 'Arriving' if kwargs.get('time_is_arrival') else 'Departing'
+            'timeIs': 'Arriving' if kwargs.get('time_is_arrival') else 'Departing'
         }
 
         # Add optional parameters
@@ -211,8 +211,6 @@ class TravelCalculator:
         if kwargs.get('time'):
             params['time'] = kwargs['time']
 
-        # # Set date (defaults to today)
-        # params['date'] = kwargs.get('date', datetime.now().strftime('%Y%m%d'))
 
         try:
             response = requests.get(url, params=params, timeout=10)
@@ -221,32 +219,7 @@ class TravelCalculator:
 
             journeys = data.get('journeys', [])
 
-            # # Filter out duplicate routes (same start and end stations)ß
-            # if journeys:
-            #     filtered_journeys = []
-            #     seen_routes = set()  # Track unique start-end combinations
-
-            #     for journey in journeys:
-            #         legs = journey.get('legs', [])
-            #         if legs and len(legs) > 0:
-            #             first_leg = legs[1]
-            #             last_leg = legs[1]
-
-            #             start_station = first_leg.get('departurePoint', {}).get('commonName', '').strip()
-            #             end_station = last_leg.get('arrivalPoint', {}).get('commonName', '').strip()
-
-            #             # Create a unique key for this route
-            #             route_key = (start_station.lower(), end_station.lower())
-
-            #             # Only include if we haven't seen this start-end combination before
-            #             if route_key not in seen_routes:
-            #                 seen_routes.add(route_key)
-            #                 filtered_journeys.append(journey)
-            #         else:
-            #             filtered_journeys.append(journey)
-
-            #     return filtered_journeys if filtered_journeys else None
-            # Filter out duplicate routes (same route details)
+            # Filter out duplicate routes (same entire route)
             if journeys:
                 filtered_journeys = []
                 seen_routes = set()  # Track unique route fingerprints
@@ -894,10 +867,10 @@ if __name__ == "__main__":
     print("=" * 50)
     print("Test 1: TfL Journey with Interactive Selection")
     print("=" * 50)
-    from_loc = 'IG3 8EE'
+    from_loc = 'WC2N 5DU'
     to_loc = 'EC2Y 5BL' #benoy: 'EC2Y 5BL' 1 Oxford St, London , E20 2ZQ
     # time='0830'
-    date='20251117'
+    date='20251123'
     time=None
     # date=None
 
@@ -924,7 +897,7 @@ if __name__ == "__main__":
     print("Test 2: Monthly Commute Cost (using cached journey)")
     print("=" * 50)
 
-    monthly = calculator.calculate_monthly_commute_cost(journey=journey)
+    monthly = calculator.calculate_monthly_commute_cost(journey=journey, days_per_week=2)
 
     if monthly.get('success'):
         if monthly.get('warning'):

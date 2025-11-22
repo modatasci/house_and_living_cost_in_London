@@ -41,6 +41,8 @@ if 'council_tax_data' not in st.session_state:
     st.session_state.council_tax_data = None
 if 'rent_data' not in st.session_state:
     st.session_state.rent_data = None
+if 'traveling_days' not in st.session_state:
+    st.session_state.traveling_days = 5
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -94,6 +96,16 @@ with st.sidebar:
             pref_param = "leastinterchange"
         elif journey_preference == "Least walking":
             pref_param = "leastwalking"
+
+
+        traveling_days_sidebar = st.selectbox(
+            "Traveling Days per Week",
+            [5, 4, 3, 2, 1],
+            index=[5, 4, 3, 2, 1].index(st.session_state.traveling_days) if st.session_state.traveling_days in [5, 4, 3, 2, 1] else 0,
+            help="Number of days you commute per week"
+        )
+        if traveling_days_sidebar != st.session_state.traveling_days:
+            st.session_state.traveling_days = traveling_days_sidebar    
 
     st.divider()
 
@@ -306,10 +318,24 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             st.session_state.calculator.last_journey = st.session_state.journey_result
             journey = st.session_state.journey_result
 
+        # Traveling days selector
+        traveling_days = st.selectbox(
+            "Traveling Days per Week:",
+            [5, 4, 3, 2, 1],
+            index=[5, 4, 3, 2, 1].index(st.session_state.traveling_days) if st.session_state.traveling_days in [5, 4, 3, 2, 1] else 0,
+            key="traveling_days_selector",
+            help="Number of days you commute per week"
+        )
+        if traveling_days != st.session_state.traveling_days:
+            st.session_state.traveling_days = traveling_days
+            st.rerun()
+
     with selector_col2:
         # Housing selectors (council tax band and bedroom category)
         if st.session_state.council_tax_data or st.session_state.rent_data:
             st.subheader("Housing Options")
+
+
 
             # Council tax band selector
             if st.session_state.council_tax_data:
@@ -365,7 +391,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
     st.subheader("💰 Cost Summary")
 
     # Calculate monthly commute cost
-    monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey)
+    monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey, days_per_week=st.session_state.traveling_days)
     monthly_commute = monthly.get('monthly_cost_with_cap', 0) if monthly.get('success') else 0
 
     # Get council tax
@@ -396,7 +422,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
     with col3:
         if monthly_commute > 0:
-            st.metric("Monthly Commute", f"£{monthly_commute:.2f}")
+            st.metric(f"Monthly Commute ({traveling_days} days a week)", f"£{monthly_commute:.2f}")
         else:
             st.metric("Monthly Commute", "N/A")
 
@@ -438,7 +464,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
     with col_left:
         st.subheader("🚇 Commute Cost")
 
-        monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey)
+        monthly = st.session_state.calculator.calculate_monthly_commute_cost(journey=journey, days_per_week=st.session_state.traveling_days)
 
         if monthly.get('success'):
             st.metric("Daily", f"£{monthly['daily_cost']:.2f}")
