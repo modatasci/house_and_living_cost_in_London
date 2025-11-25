@@ -41,9 +41,16 @@ ENV/
 .ipynb_checkpoints
 
 # Data files (large datasets)
+# Ignore everything in data/ first
 data/
 data/**/*
-*.csv
+
+# Then explicitly allow specific required files (only small processed files)
+!data/geodata/post_code/london_post_code_data.csv
+!data/council_tax/council_tax_2024_2025.csv
+!data/rent_price/londonrent.csv
+
+# Still ignore these data file types elsewhere
 *.json
 *.parquet
 *.dbf

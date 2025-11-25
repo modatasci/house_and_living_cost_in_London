@@ -19,14 +19,14 @@ def get_borough_from_postcode(postcode: str) -> str:
 
     Args:
         postcode (str): The postcode to look up.
-        postcode_df (pd.DataFrame): DataFrame containing postcode to borough mapping.
 
     Returns:
         str: The name of the borough corresponding to the postcode.
     """
     # Default path relative to this script
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_path = os.path.join(base_dir, 'data', 'geodata','post_code', 'PCD_OA21_LSOA21_MSOA21_LAD_MAY25_UK_LU.csv')
+    # Use the pre-processed London-only postcode data (much smaller file)
+    data_path = os.path.join(base_dir, 'data', 'geodata','post_code', 'london_post_code_data.csv')
 
     # Load post code data
     postcode_df = pd.read_csv(data_path)
