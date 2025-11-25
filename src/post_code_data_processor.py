@@ -12,6 +12,30 @@ https://geoportal.statistics.gov.uk/datasets/7fc55d71a09d4dcfa1fd6473138aacc3/ab
 import pandas as pd
 import os
 
+def get_borough_from_postcode(postcode: str) -> str:
+    """
+    Given a postcode and a dataframe of postcodes to boroughs,
+    return the corresponding borough name.
+
+    Args:
+        postcode (str): The postcode to look up.
+        postcode_df (pd.DataFrame): DataFrame containing postcode to borough mapping.
+
+    Returns:
+        str: The name of the borough corresponding to the postcode.
+    """
+    # Default path relative to this script
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.path.join(base_dir, 'data', 'geodata','post_code', 'PCD_OA21_LSOA21_MSOA21_LAD_MAY25_UK_LU.csv')
+
+    # Load post code data
+    postcode_df = pd.read_csv(data_path)
+    match = postcode_df[postcode_df['pcds'] == postcode]
+    if not match.empty:
+        return match.iloc[0]['ladnm']
+    else:
+        return "Unknown"
+
 def main():
 
     # Default path relative to this script

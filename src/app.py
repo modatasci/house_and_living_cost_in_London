@@ -4,9 +4,12 @@ Allows users to calculate commute routes and costs between postcodes
 """
 
 import streamlit as st
+import pandas as pd
+from datetime import datetime
 from route_calculator import TravelCalculator
 from get_living_cost import CouncilTaxLookup
 from get_living_cost import AverageRentCost
+from post_code_data_processor import get_borough_from_postcode
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -43,6 +46,10 @@ if 'rent_data' not in st.session_state:
     st.session_state.rent_data = None
 if 'traveling_days' not in st.session_state:
     st.session_state.traveling_days = 5
+if 'saved_comparisons' not in st.session_state:
+    st.session_state.saved_comparisons = []
+if 'comparison_counter' not in st.session_state:
+    st.session_state.comparison_counter = 0
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -227,6 +234,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
     st.markdown("---")
     route_header_col1, route_header_col2, route_header_col3 = st.columns([1, 0.3, 1])
 
+    # From postcodes and boroughs
     with route_header_col1:
         # Get borough for "from" location
         from_borough = "Unknown"
@@ -234,12 +242,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             from_borough = st.session_state.council_tax_data.get('borough', 'Unknown')
         elif st.session_state.rent_data:
             from_borough = st.session_state.rent_data.get('borough', 'Unknown')
-        # # Get borough for "to" location - currently does not work because we don't fetch council tax or rent for "to" postcode
-        # to_borough = "Unknown"
-        # if st.session_state.council_tax_data:
-        #     to_borough = st.session_state.council_tax_data.get('borough', 'Unknown')
-        # elif st.session_state.rent_data:
-        #     to_borough = st.session_state.rent_data.get('borough', 'Unknown')
+
 
         st.markdown(f"""
         ### 🏠 From
@@ -250,10 +253,13 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
     with route_header_col2:
         st.markdown("<div style='text-align: center; padding-top: 30px; font-size: 24px;'>→</div>", unsafe_allow_html=True)
 
+    # To postcodes
     with route_header_col3:
+        to_borough = get_borough_from_postcode(to_postcode)
         st.markdown(f"""
         ### 🏢 To
         **Postcode:** {to_postcode}
+        **Borough:** {to_borough}
         """)
 
     st.markdown("---")
@@ -419,12 +425,14 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             st.metric("Single Fare", f"£{fare_value:.2f}")
         else:
             st.metric("Single Fare", "N/A")
+            st.caption("⚠️ Fare information unavailable at the moment")
 
     with col3:
         if monthly_commute > 0:
             st.metric(f"Monthly Commute ({traveling_days} days a week)", f"£{monthly_commute:.2f}")
         else:
             st.metric("Monthly Commute", "N/A")
+            st.caption("⚠️ Fare information unavailable at the moment")
 
     with col4:
         if monthly_rent > 0:
@@ -451,6 +459,68 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                      help="Commute + Rent + Council Tax")
         else:
             st.metric("Total Monthly", "N/A")
+
+    # Save for comparison button
+    st.markdown("")  # Add spacing
+    save_col1, save_col2, save_col3 = st.columns([1, 2, 1])
+    with save_col2:
+        comparison_name = st.text_input(
+            "Comparison Name (optional)",
+            value="",
+            placeholder=f"Comparison #{st.session_state.comparison_counter + 1}",
+            key="comparison_name_input"
+        )
+
+        if st.button("💾 Save for Comparison", type="primary", use_container_width=True):
+            # Prepare comparison data
+            comparison_data = {
+                'Name': comparison_name if comparison_name.strip() else f"Comparison #{st.session_state.comparison_counter + 1}",
+                'From Postcode': from_postcode,
+                'From Borough': from_borough,
+                'To Postcode': to_postcode,
+                'To Borough': to_borough,
+                'Journey Time (min)': journey['duration_minutes'],
+                'Single Fare (£)': fare_value if fare_value else None,
+                'Traveling Days/Week': traveling_days,
+                'Monthly Commute (£)': monthly_commute if monthly_commute > 0 else None,
+                'Council Tax Band': st.session_state.council_tax_data.get('band', 'N/A') if st.session_state.council_tax_data else 'N/A',
+                'Monthly Council Tax (£)': monthly_council_tax if monthly_council_tax > 0 else None,
+                'Bedroom Category': st.session_state.rent_data.get('bedroom_category', 'N/A') if st.session_state.rent_data else 'N/A',
+                'Monthly Rent (£)': monthly_rent if monthly_rent > 0 else None,
+                'Total Monthly (£)': total_monthly if total_monthly > 0 else None,
+                'Saved At': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+
+            # Add to saved comparisons
+            st.session_state.saved_comparisons.append(comparison_data)
+            st.session_state.comparison_counter += 1
+            st.success(f"✅ Saved: {comparison_data['Name']}")
+            st.rerun()
+
+        # View comparisons button (shown only if there are saved comparisons)
+        if st.session_state.saved_comparisons:
+            st.markdown("")
+            # Create a link button using HTML
+            num_comparisons = len(st.session_state.saved_comparisons)
+            st.markdown(
+                f"""
+                <a href="#saved-comparisons" style="text-decoration: none;">
+                    <button style="
+                        width: 100%;
+                        padding: 0.5rem 1rem;
+                        background-color: #ffffff;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 0.5rem;
+                        cursor: pointer;
+                        font-size: 1rem;
+                        color: #262730;
+                    ">
+                        📊 View Saved Comparisons ({num_comparisons})
+                    </button>
+                </a>
+                """,
+                unsafe_allow_html=True
+            )
 
     st.divider()
     # endregion Key metrics
@@ -620,9 +690,79 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
     # endregion route details and map
     #-------------------------------------------------------------------------------------------------------------------------
 
-else:
+# Display saved comparisons (shown always, if there are any saved)
+if st.session_state.saved_comparisons:
+    st.markdown("---")
+    # Add anchor for scrolling
+    st.markdown('<div id="saved-comparisons"></div>', unsafe_allow_html=True)
+    st.subheader("📊 Saved Comparisons")
+
+    # Create DataFrame from saved comparisons
+    df = pd.DataFrame(st.session_state.saved_comparisons)
+
+    # Reorder columns for better display
+    column_order = [
+        'Name',
+        'From Postcode',
+        'From Borough',
+        'To Postcode',
+        'To Borough',
+        'Journey Time (min)',
+        'Single Fare (£)',
+        'Traveling Days/Week',
+        'Monthly Commute (£)',
+        'Council Tax Band',
+        'Monthly Council Tax (£)',
+        'Bedroom Category',
+        'Monthly Rent (£)',
+        'Total Monthly (£)',
+        'Saved At'
+    ]
+    df = df[column_order]
+
+    # Display the dataframe
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    # Action buttons
+    action_col1, action_col2, action_col3 = st.columns([1, 1, 3])
+
+    with action_col1:
+        if st.button("🗑️ Clear All", use_container_width=True):
+            st.session_state.saved_comparisons = []
+            st.session_state.comparison_counter = 0
+            st.success("All comparisons cleared!")
+            st.rerun()
+
+    with action_col2:
+        # Export to CSV
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download CSV",
+            data=csv,
+            file_name=f"london_housing_comparisons_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    # Individual delete functionality
+    with st.expander("🗑️ Delete Individual Comparisons"):
+        for idx, comparison in enumerate(st.session_state.saved_comparisons):
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.text(f"{comparison['Name']} - {comparison['From Postcode']} → {comparison['To Postcode']}")
+            with col2:
+                if st.button(f"Delete", key=f"delete_{idx}"):
+                    st.session_state.saved_comparisons.pop(idx)
+                    st.success(f"Deleted: {comparison['Name']}")
+                    st.rerun()
+
+if not st.session_state.journey_result or not st.session_state.journey_result.get('success'):
     # Initial state - show instructions
-    st.info("👈 Enter your home and office postcodes in the sidebar and click 'Calculate Route' to get started")
+    st.info("👈 Enter your home and office/school postcodes (Full Postcode Format) in the sidebar and click 'Calculate Cost' to get started")
 
     # Example postcodes
     st.subheader("Example Postcodes")
@@ -631,7 +771,6 @@ else:
     with col1:
         st.markdown("""
         **Popular Home Areas:**
-        - IG3 8EE (Ilford)
         - SW1A 1AA (Westminster)
         - E1 6AN (Whitechapel)
         - N1 9AG (Islington)
@@ -647,4 +786,5 @@ else:
 
 # Footer
 st.divider()
-st.caption("Powered by TfL Journey Planner API | Data may be subject to TfL terms and conditions")
+st.caption("**Data Sources:** TfL Journey Planner API • Office for National Statistics • London Datastore")
+st.caption("Council tax and rent data are averages for reference only. Actual costs may vary.")
