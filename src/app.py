@@ -11,6 +11,7 @@ from get_living_cost import CouncilTaxLookup
 from get_living_cost import AverageRentCost
 from post_code_data_processor import get_borough_from_postcode
 from dotenv import load_dotenv
+import os
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +22,16 @@ st.set_page_config(
     page_icon="🏠",
     layout="wide"
 )
+
+# Get TFL API key from Streamlit secrets or environment variables
+def get_tfl_api_key():
+    """Get TFL API key from Streamlit secrets (cloud) or environment (local)"""
+    try:
+        # Try Streamlit secrets first (for cloud deployment)
+        return st.secrets["TFL_APP_KEY"]
+    except (KeyError, FileNotFoundError, AttributeError):
+        # Fall back to environment variable (for local development)
+        return os.getenv("TFL_APP_KEY")
 
 # Cache the lookup instances
 @st.cache_resource
@@ -35,7 +46,8 @@ def get_rent_lookup():
 
 # Initialize calculator in session state
 if 'calculator' not in st.session_state:
-    st.session_state.calculator = TravelCalculator()
+    tfl_key = get_tfl_api_key()
+    st.session_state.calculator = TravelCalculator(tfl_app_key=tfl_key)
 if 'journey_result' not in st.session_state:
     st.session_state.journey_result = None
 if 'all_journeys' not in st.session_state:
