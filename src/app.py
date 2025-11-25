@@ -825,4 +825,4 @@ if not st.session_state.journey_result or not st.session_state.journey_result.ge
 # Footer
 st.divider()
 st.caption("**Data Sources:** TfL Journey Planner API • Office for National Statistics • London Datastore")
-st.caption("Council tax and rent data are averages for reference only. Actual costs may vary.")
+st.caption("Council tax and rent data are averages by borough and for reference only. Actual costs may vary.")
