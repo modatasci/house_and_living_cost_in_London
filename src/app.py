@@ -104,6 +104,23 @@ with st.sidebar:
         elif journey_preference == "Least walking":
             pref_param = "leastwalking"
 
+        # Journey time selector
+        journey_time = st.selectbox(
+            "Journey Time",
+            ["Current Time", "Rush Hour (8:30 AM)", "Off-Peak (11:00 AM)"],
+            index=0,
+            help="Select journey time to see different travel durations and costs"
+        )
+
+        # Map time selection to API format
+        time_param = None
+        time_label = "Current Time"
+        if journey_time == "Rush Hour (8:30 AM)":
+            time_param = "0830"
+            time_label = "Rush Hour"
+        elif journey_time == "Off-Peak (11:00 AM)":
+            time_param = "1100"
+            time_label = "Off-Peak"
 
         traveling_days_sidebar = st.selectbox(
             "Traveling Days per Week",
@@ -152,6 +169,8 @@ if calculate_button:
                 kwargs['mode'] = mode_param
             if pref_param:
                 kwargs['journey_preference'] = pref_param
+            if time_param:
+                kwargs['time'] = time_param
 
             journeys = st.session_state.calculator.get_all_journey_options(
                 from_postcode,
@@ -172,6 +191,8 @@ if calculate_button:
                     'raw_data': journeys[0]
                 }
                 st.session_state.calculator.last_journey = st.session_state.journey_result
+                # Store journey time selection
+                st.session_state.journey_time_label = time_label
             else:
                 st.error("No journey options found. Please check your postcodes and try again.")
                 st.session_state.journey_result = None
@@ -472,6 +493,9 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
         )
 
         if st.button("💾 Save for Comparison", type="primary", use_container_width=True):
+            # Get journey time label from session state
+            journey_time_period = st.session_state.get('journey_time_label', 'Current Time')
+
             # Prepare comparison data
             comparison_data = {
                 'Name': comparison_name if comparison_name.strip() else f"Comparison #{st.session_state.comparison_counter + 1}",
@@ -479,6 +503,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 'From Borough': from_borough,
                 'To Postcode': to_postcode,
                 'To Borough': to_borough,
+                'Journey Period': journey_time_period,
                 'Journey Time (min)': journey['duration_minutes'],
                 'Single Fare (£)': fare_value if fare_value else None,
                 'Traveling Days/Week': traveling_days,
@@ -707,6 +732,7 @@ if st.session_state.saved_comparisons:
         'From Borough',
         'To Postcode',
         'To Borough',
+        'Journey Period',
         'Journey Time (min)',
         'Single Fare (£)',
         'Traveling Days/Week',
