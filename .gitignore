@@ -63,9 +63,9 @@ data/**/*
 # Large notebook files
 notebook/geodata_tutorial.ipynb
 
-# local notes only
-PROJECT_PLAN.md
-postcode_visualization_guide.md
+# Exclude all .md files except README.md
+*.md
+!README.md
 
 # Generated outputs
 *.html
