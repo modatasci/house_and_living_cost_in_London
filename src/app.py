@@ -62,6 +62,10 @@ if 'saved_comparisons' not in st.session_state:
     st.session_state.saved_comparisons = []
 if 'comparison_counter' not in st.session_state:
     st.session_state.comparison_counter = 0
+if 'manual_rent_enabled' not in st.session_state:
+    st.session_state.manual_rent_enabled = False
+if 'manual_rent_value' not in st.session_state:
+    st.session_state.manual_rent_value = 0.0
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -74,13 +78,13 @@ with st.sidebar:
     # Location inputs
     from_postcode = st.text_input(
         "From (Home Postcode)",
-        value="IG3 8EE",
+        value='',
         placeholder="e.g., SW1A 1AA"
     ).strip()
 
     to_postcode = st.text_input(
         "To (Office/School Postcode)",
-        value="EC2Y 5BL",
+        value="",
         placeholder="e.g., E1 6AN"
     ).strip()
 
@@ -156,13 +160,34 @@ with st.sidebar:
         help="Select your property's council tax band"
     )
 
-    # Bedroom category selector for rent
-    bedroom_category = st.selectbox(
-        "Bedroom Category",
-        ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"],
-        index=2,  # Default to One Bedroom
-        help="Select bedroom category for average rent calculation"
+    # Manual rent option
+    manual_rent_enabled = st.checkbox(
+        "Enter rent manually",
+        value=st.session_state.manual_rent_enabled,
+        help="Check this to enter your own rent amount instead of using average data"
     )
+
+    if manual_rent_enabled:
+        st.session_state.manual_rent_enabled = True
+        manual_rent_value = st.number_input(
+            "Monthly Rent (£)",
+            min_value=0.0,
+            max_value=10000.0,
+            value=st.session_state.manual_rent_value if st.session_state.manual_rent_value > 0 else 1500.0,
+            step=50.0,
+            help="Enter your monthly rent in pounds"
+        )
+        st.session_state.manual_rent_value = manual_rent_value
+        bedroom_category = None  # Not used when manual
+    else:
+        st.session_state.manual_rent_enabled = False
+        # Bedroom category selector for rent
+        bedroom_category = st.selectbox(
+            "Bedroom Category",
+            ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"],
+            index=2,  # Default to One Bedroom
+            help="Select bedroom category for average rent calculation"
+        )
 
     st.divider()
 
@@ -231,38 +256,57 @@ if calculate_button:
                 st.error(f"Error calculating council tax: {str(e)}")
                 st.session_state.council_tax_data = None
 
-        # Calculate average rent for home postcode
-        with st.spinner("Calculating average rent..."):
-            try:
-                rent_lookup = get_rent_lookup()
-                rent_info = rent_lookup.get_average_rent_by_postcode(
-                    from_postcode,
-                    bedroom_category=bedroom_category,
-                    use_median=True
-                )
+        # Calculate average rent for home postcode or use manual input
+        if manual_rent_enabled and st.session_state.manual_rent_value > 0:
+            # Use manual rent input
+            st.session_state.rent_data = {
+                'borough': 'Manual Entry',
+                'postcode': from_postcode,
+                'bedroom_category': 'Manual Entry',
+                'monthly_rent': st.session_state.manual_rent_value,
+                'annual_rent': st.session_state.manual_rent_value * 12,
+                'lower_quartile': None,
+                'upper_quartile': None,
+                'all_categories': None,
+                'is_manual': True
+            }
+        else:
+            # Use automatic rent lookup
+            with st.spinner("Calculating average rent..."):
+                try:
+                    rent_lookup = get_rent_lookup()
+                    rent_info = rent_lookup.get_average_rent_by_postcode(
+                        from_postcode,
+                        bedroom_category=bedroom_category,
+                        use_median=True
+                    )
 
-                if rent_info:
-                    st.session_state.rent_data = {
-                        'borough': rent_info.get('borough'),
-                        'postcode': from_postcode,
-                        'bedroom_category': bedroom_category,
-                        'monthly_rent': rent_info.get('monthly_rent', 0),
-                        'annual_rent': rent_info.get('annual_rent', 0),
-                        'lower_quartile': rent_info.get('lower_quartile'),
-                        'upper_quartile': rent_info.get('upper_quartile'),
-                        'all_categories': rent_lookup.get_all_bedroom_categories(from_postcode)
-                    }
-                else:
-                    st.warning(f"Could not find rent data for postcode: {from_postcode}")
+                    if rent_info:
+                        st.session_state.rent_data = {
+                            'borough': rent_info.get('borough'),
+                            'postcode': from_postcode,
+                            'bedroom_category': bedroom_category,
+                            'monthly_rent': rent_info.get('monthly_rent', 0),
+                            'annual_rent': rent_info.get('annual_rent', 0),
+                            'lower_quartile': rent_info.get('lower_quartile'),
+                            'upper_quartile': rent_info.get('upper_quartile'),
+                            'all_categories': rent_lookup.get_all_bedroom_categories(from_postcode),
+                            'is_manual': False
+                        }
+                    else:
+                        st.warning(f"Could not find rent data for postcode: {from_postcode}")
+                        st.session_state.rent_data = None
+                except Exception as e:
+                    st.error(f"Error calculating rent: {str(e)}")
                     st.session_state.rent_data = None
-            except Exception as e:
-                st.error(f"Error calculating rent: {str(e)}")
-                st.session_state.rent_data = None
 
 # Display results
 if st.session_state.journey_result and st.session_state.journey_result.get('success'):
     journey = st.session_state.journey_result
 
+    #-------------------------------------------------------------------------------------------------------------------------
+    # region Journey route summary
+    
     # Display journey route summary
     st.markdown("---")
     route_header_col1, route_header_col2, route_header_col3 = st.columns([1, 0.3, 1])
@@ -297,6 +341,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
     st.markdown("---")
 
+    # endregion Journey route summary
     #-------------------------------------------------------------------------------------------------------------------------
     # region Journey options and council tax band selectors
     selector_col1, selector_col2 = st.columns([2, 1])
@@ -400,8 +445,8 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                     st.session_state.council_tax_data['annual'] = monthly_amount * 12
                     st.rerun()
 
-            # Bedroom category selector
-            if st.session_state.rent_data:
+            # Bedroom category selector (only show if not using manual rent)
+            if st.session_state.rent_data and not st.session_state.rent_data.get('is_manual', False):
                 bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
                 current_category = st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
                 current_category_index = bedroom_categories.index(current_category) if current_category in bedroom_categories else 2
@@ -586,12 +631,17 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
     # Rent breakdown
     with col_middle:
-        st.subheader("🏘️ Average Rent")
+        st.subheader("🏘️ Rent")
 
         if st.session_state.rent_data:
             rent_data = st.session_state.rent_data
+            is_manual = rent_data.get('is_manual', False)
 
-            st.info(f"**Borough:** {rent_data.get('borough', 'Unknown')}")
+            # Show different info based on manual vs automatic
+            if is_manual:
+                st.info(f"**Source:** Manual Entry")
+            else:
+                st.info(f"**Borough:** {rent_data.get('borough', 'Unknown')}")
 
             st.metric(
                 f"Monthly ({rent_data.get('bedroom_category', 'N/A')})",
@@ -603,20 +653,21 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 f"£{rent_data.get('annual_rent', 0):.2f}"
             )
 
-            # Show comparison across bedroom categories
-            with st.expander("Compare Categories"):
-                all_categories = rent_data.get('all_categories', {})
-                if all_categories:
-                    category_comparison = []
-                    for category, monthly_price in all_categories.items():
-                        annual_price = monthly_price * 12
-                        category_comparison.append({
-                            'Category': category,
-                            'Monthly': f"£{monthly_price:.2f}"
-                        })
+            # Show comparison across bedroom categories (only for automatic lookup)
+            if not is_manual:
+                with st.expander("Compare Categories"):
+                    all_categories = rent_data.get('all_categories', {})
+                    if all_categories:
+                        category_comparison = []
+                        for category, monthly_price in all_categories.items():
+                            annual_price = monthly_price * 12
+                            category_comparison.append({
+                                'Category': category,
+                                'Monthly': f"£{monthly_price:.2f}"
+                            })
 
-                    if category_comparison:
-                        st.table(category_comparison)
+                        if category_comparison:
+                            st.table(category_comparison)
         else:
             st.warning("Rent data not available")
 
@@ -723,7 +774,6 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
         except Exception as e:
             st.warning(f"Could not generate map: {str(e)}")
 
-    st.divider()
     # endregion route details and map
     #-------------------------------------------------------------------------------------------------------------------------
 
@@ -824,5 +874,5 @@ if not st.session_state.journey_result or not st.session_state.journey_result.ge
 
 # Footer
 st.divider()
-st.caption("**Data Sources:** TfL Journey Planner API • Office for National Statistics • London Datastore")
+st.caption("**Powered by and Data Sources:** TfL Journey Planner API • Office for National Statistics • London Datastore")
 st.caption("Council tax and rent data are averages by borough and for reference only. Actual costs may vary.")

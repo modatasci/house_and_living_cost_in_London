@@ -867,12 +867,12 @@ if __name__ == "__main__":
     print("=" * 50)
     print("Test 1: TfL Journey with Interactive Selection")
     print("=" * 50)
-    from_loc = 'WC2N 5DU'
+    from_loc = 'UB7 7GJ'
     to_loc = 'EC2Y 5BL' #benoy: 'EC2Y 5BL' 1 Oxford St, London , E20 2ZQ
-    # time='0830'
-    date='20251123'
-    time=None
-    # date=None
+    time='0830'
+    # date='20251123'
+    # time=None
+    date=None
 
     # Let user select from all available journey options
     journey = calculator.select_journey_option(from_loc, to_loc,time=time,date=date)

@@ -63,6 +63,10 @@ data/**/*
 # Large notebook files
 notebook/geodata_tutorial.ipynb
 
+# local notes only
+PROJECT_PLAN.md
+postcode_visualization_guide.md
+
 # Generated outputs
 *.html
 journey_map.html

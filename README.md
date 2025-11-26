@@ -1,196 +1,198 @@
-# Housing and Living Cost in London
+# 🏠 Where to Live in London?
 
-This project provides tools to analyze housing and living costs in London, including comprehensive journey planning, travel cost estimation, and route visualization using Transport for London (TfL) data.
+A comprehensive Streamlit web application that helps you make informed decisions about where to live in London by calculating and comparing travel costs, council tax, and rent prices between different postcodes.
 
-## Features
+**🔗 Live App**: [https://housing-in-london.streamlit.app](https://housing-in-london.streamlit.app)
 
-### 🚇 Route Calculator (`route_calculator.py`)
+## Overview
 
-A comprehensive travel planning tool with the following capabilities:
+This app combines real-time Transport for London (TfL) journey data with council tax and rental price information to give you a complete picture of the monthly cost of living in different London areas.
 
-#### Journey Planning
-- **Interactive Journey Selection**: Browse all available route options and select your preferred journey
-- **Multiple Journey Options**: View and compare different routes between two locations
-- **Detailed Journey Instructions**: Step-by-step directions for each leg of the journey
-- **Smart Route Filtering**: Automatically filters out duplicate routes with the same start/end stations
+## ✨ Key Features
 
-#### Travel Cost Analysis
-- **Single Journey Fares**: Get accurate fare information from TfL API
-- **Monthly Commute Cost**: Calculate estimated monthly commuting expenses
-- **Cost Breakdown**: View daily, weekly, monthly, and annual cost estimates
-- **Fare Capping**: Includes daily and monthly cap calculations
+### 🚇 Journey Planning & Travel Costs
+- **Multiple Route Options**: Compare different journey routes between any two London postcodes
+- **Journey Time Selection**: View costs for current time, rush hour (8:30 AM), or off-peak (11:00 AM)
+- **Smart Route Filtering**: Automatically filters duplicate routes for clearer comparisons
+- **Advanced Journey Options**:
+  - Transport mode selection (tube, bus, DLR, overground, etc.)
+  - Journey preferences (least time, least walking, least interchanges)
+  - Customizable travel days per week (1-5 days)
+- **Cost Breakdown**:
+  - Single journey fare
+  - Daily, weekly, and monthly commute costs
+  - Includes TfL fare capping calculations
+- **Interactive Maps**: Visual journey representation with color-coded transport modes
 
-#### Route Visualization
-- **Interactive Maps**: Visual representation of your journey on an interactive map
-- **Color-Coded Routes**: Different transport modes shown in different colors
-- **Station Markers**: Start, end, and transfer points clearly marked
-- **Route Details**: Click markers and paths for journey information
+### 🏛️ Council Tax
+- Council tax lookup by postcode and borough
+- Monthly and annual costs for all bands (A-H)
+- Interactive band selector to see different cost scenarios
+- Data source: [London Datastore](https://data.london.gov.uk/dataset/council-tax-charges-bands-borough-expnl/)
 
-#### Advanced Options
-- **Transport Mode Selection**: Choose specific modes (tube, bus, DLR, overground, etc.)
-- **Journey Preferences**: Optimize for least time, least walking, or least interchanges
-- **Via Points**: Add intermediate stops to your journey
-- **Time Scheduling**: Plan journeys for specific departure or arrival times
-- **Date Selection**: Plan journeys for any date (defaults to today)
+### 🏘️ Average Rent Prices
+- Median rent prices by bedroom category:
+  - Room, Studio, One Bedroom, Two Bedrooms, Three Bedrooms, Four or More Bedrooms
+- Monthly and annual rent estimates
+- Lower and upper quartile data for context
+- Data source: [ONS Private Rental Market in London](https://www.ons.gov.uk/economy/inflationandpriceindices/adhocs/2923privaterentalmarketinlondonjuly2024tojune2025)
 
-#### Additional Features
-- **OSRM Integration**: Get driving, walking, and cycling distances
-- **Haversine Distance**: Calculate straight-line distances between points
-- **Journey Caching**: Automatically caches the last journey for reuse
+### 💰 Cost Comparison
+- **Total Monthly Cost**: Combined view of commute + rent + council tax
+- **Save Comparisons**: Save multiple location scenarios with custom names
+- **Export to CSV**: Download all saved comparisons for further analysis
+- **Comprehensive Details**: Each comparison includes:
+  - From/To postcodes and boroughs
+  - Journey time and period (rush hour/off-peak)
+  - Travel days per week
+  - Council tax band
+  - Bedroom category
+  - All associated costs
 
-### Council Tax
-- Source:  https://data.london.gov.uk/dataset/council-tax-charges-bands-borough-expnl/
-### Average rent
-- Source: https://www.ons.gov.uk/economy/inflationandpriceindices/adhocs/2923privaterentalmarketinlondonjuly2024tojune2025
-## Installation
+### 🗺️ Interactive Visualization
+- Journey maps with station markers and route details
+- Color-coded transport modes
+- Borough information for each postcode
+## 🚀 Quick Start
 
-### Prerequisites
+### Using the Live App
+Simply visit **[https://housing-in-london.streamlit.app](https://housing-in-london.streamlit.app)** and start comparing locations!
+
+### Running Locally
+
+**Prerequisites:**
 - Python 3.8+
-- TfL API Key ([Get one here](https://api-portal.tfl.gov.uk/))
+- TfL API Key ([Get one free here](https://api-portal.tfl.gov.uk/))
 
-### Setup
+**Setup:**
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/housing_in_london.git
 cd housing_in_london
 ```
 
-2. Install required packages:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the project root:
+3. Create a `.env` file with your TfL API key:
 ```bash
-cp .env.example .env
-```
-
-4. Add your TfL API key to `.env`:
-```
 TFL_APP_KEY=your_api_key_here
 ```
 
-## Usage
-
-### Basic Example
-
-```python
-from route_calculator import TravelCalculator
-
-# Initialize calculator
-calculator = TravelCalculator()
-
-# Interactive journey selection
-journey = calculator.select_journey_option('IG3 8EE', 'EC2Y 5BL')
-
-# Print detailed instructions
-calculator.print_journey_instructions()
-
-# Visualize on map
-calculator.visualize_journey()
-
-# Calculate monthly costs
-monthly_cost = calculator.calculate_monthly_commute_cost()
-print(f"Monthly cost: £{monthly_cost['monthly_cost']:.2f}")
+4. Run the Streamlit app:
+```bash
+streamlit run src/app.py
 ```
 
-### Advanced Usage
+## 📖 How to Use
 
-```python
-# Journey with specific options
-journey = calculator.get_tfl_journey(
-    from_location='IG3 8EE',
-    to_location='EC2Y 5BL',
-    mode='tube,bus',
-    journey_preference='leasttime',
-    time='0900',  # 9:00 AM
-    date='20250120',  # January 20, 2025
-    time_is_arrival=False,
-    via='Liverpool Street'
-)
+1. **Enter Postcodes**: Input your home and office/school postcodes in the sidebar
+2. **Set Preferences**:
+   - Choose council tax band (A-H)
+   - Select bedroom category for rent
+   - Set traveling days per week
+   - Optional: Adjust journey time (rush hour/off-peak) and transport modes
+3. **Calculate**: Click "Calculate Costs" to see your results
+4. **Compare Routes**: If multiple routes are available, select your preferred option
+5. **Adjust Parameters**: Change council tax band, bedroom category, or travel days on the fly
+6. **Save Comparisons**: Add a name and save different scenarios to compare side-by-side
+7. **Export**: Download all saved comparisons as CSV for further analysis
 
-# Get all journey options
-all_options = calculator.get_all_journey_options('IG3 8EE', 'EC2Y 5BL')
+## 📱 Example Use Cases
 
-# Calculate driving distance
-route = calculator.get_osrm_route(
-    from_coords=(-0.1276, 51.5014),
-    to_coords=(-0.0753, 51.5055),
-    profile='driving'
-)
-```
+**Scenario 1: New Job, Where Should I Live?**
+- Input your new office postcode
+- Try different residential postcodes (e.g., different boroughs)
+- Compare total monthly costs to find the sweet spot
 
-## API Parameters
+**Scenario 2: Comparing Neighborhoods**
+- Save comparisons for Zones 2, 3, and 4
+- See how commute costs offset by lower rent/council tax
+- Export to spreadsheet for detailed analysis
 
-### Journey Parameters
-- `from_location`: Starting postcode (e.g., 'SW1A 1AA')
-- `to_location`: Destination postcode (e.g., 'E1 6AN')
-- `mode`: Transport modes (default: all modes)
-  - Options: `tube`, `bus`, `dlr`, `overground`, `tram`, `national-rail`, `walking`, `cycle`
-- `journey_preference`: Route optimization
-  - `leasttime`: Fastest journey
-  - `leastwalking`: Minimize walking
-  - `leastinterchange`: Fewest transfers
-- `time`: Time in HHmm format (e.g., '0900' for 9:00 AM)
-- `date`: Date in YYYYMMDD format (e.g., '20250115', defaults to today)
-- `time_is_arrival`: Boolean - True for arrival time, False for departure time
-- `via`: Optional via point (station or location name)
+**Scenario 3: Part-Time Commute**
+- Adjust traveling days to 2-3 days per week
+- See how hybrid work affects total costs
+- Compare rush hour vs off-peak journey times
 
-## Output
-
-### Journey Information
-- Duration in minutes
-- Number of legs/transfers
-- Fare information (if available)
-- Start and arrival times
-- Detailed step-by-step instructions
-
-### Cost Estimates
-- Single journey fare
-- Daily commute cost (return journey)
-- Weekly cost
-- Monthly cost (with and without capping)
-- Annual cost
-
-### Map Visualization
-- HTML file with interactive map
-- Color-coded routes by transport mode
-- Clickable markers and paths
-- Journey summary legend
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 housing_in_london/
-├── route_calculator.py      # Main travel calculator module
-├── visualize_postcodes.py   # Postcode visualization tools
-├── requirements.txt         # Python dependencies
-├── .env.example            # Environment variables template
-├── .env                    # Your API keys (not in git)
-└── README.md              # This file
+├── src/
+│   ├── app.py                        # Main Streamlit application
+│   ├── route_calculator.py           # TfL journey planning & cost calculations
+│   ├── get_living_cost.py            # Council tax & rent lookup
+│   ├── post_code_data_processor.py   # Postcode to borough mapping
+│   └── council_tax_processor.py      # Council tax data processing
+├── data/
+│   ├── council_tax/
+│   │   └── council_tax_2024_2025.csv
+│   ├── rent_price/
+│   │   └── londonrent.csv
+│   └── geodata/
+│       └── post_code/
+│           └── london_post_code_data.csv
+├── .streamlit/
+│   └── secrets.toml                  # Streamlit Cloud secrets (not in git)
+├── requirements.txt                   # Python dependencies
+├── .env                              # Local API keys (not in git)
+├── .gitignore
+└── README.md
 ```
 
-## Dependencies
+## 🛠️ Technical Stack
 
-- `requests`: API calls to TfL
-- `folium`: Interactive map visualization
-- `python-dotenv`: Environment variable management
-- Additional dependencies in `requirements.txt`
+- **Frontend**: Streamlit
+- **Mapping**: Folium
+- **Data Processing**: Pandas, GeoPandas
+- **APIs**: TfL Journey Planner API
+- **Deployment**: Streamlit Cloud
 
-## Contributing
+## 📊 Data Sources
 
-Contributions are welcome! Please ensure all new features include:
-- Clear documentation
-- Example usage
-- Error handling
+- **TfL Journey Data**: [Transport for London Journey Planner API](https://api.tfl.gov.uk/)
+- **Council Tax**: [London Datastore - Council Tax Charges](https://data.london.gov.uk/dataset/council-tax-charges-bands-borough-expnl/)
+- **Rent Prices**: [ONS - Private Rental Market in London (2024-2025)](https://www.ons.gov.uk/economy/inflationandpriceindices/adhocs/2923privaterentalmarketinlondonjuly2024tojune2025)
+- **Postcode Data**: London postcode to borough mapping
 
-## License
+## 🔮 Future Enhancements
 
-[Add your license here]
+See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment details and future architecture plans including:
+- User authentication and saved preferences
+- Historical price tracking
+- Database integration (PostgreSQL + FastAPI backend)
+- Custom domain support
+- Enhanced analytics and predictive features
 
-## Acknowledgments
+## 📝 Important Notes
 
-- Transport for London (TfL) for providing the Journey Planner API
-- OpenStreetMap and OSRM for routing data
-- Folium for map visualization
+- Council tax and rent data are **averages by borough** and for reference only
+- Actual costs may vary based on specific property and location
+- Journey costs are estimates based on TfL fare data
+- Fare capping is approximate and may vary by zones
+- Data is current as of 2024-2025 tax year
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+- Fork the repository
+- Create a feature branch
+- Make your changes with clear commit messages
+- Test thoroughly
+- Submit a pull request
+
+## 📄 License
+
+This project is open source and available under the MIT License.
+
+## 🙏 Acknowledgments
+
+- **Transport for London (TfL)** for providing the Journey Planner API
+- **London Datastore** for council tax data
+- **Office for National Statistics** for rental price data
+- **Streamlit** for the amazing framework
+- **Folium** for interactive map visualization
