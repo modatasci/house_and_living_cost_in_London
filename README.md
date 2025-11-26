@@ -56,7 +56,7 @@ This app combines real-time Transport for London (TfL) journey data with council
 ## 🚀 Quick Start
 
 ### Using the Live App
-Simply visit **[https://housing-in-london.streamlit.app](https://housing-in-london.streamlit.app)** and start comparing locations!
+Simply visit **[https://wheretoliveinlondon.streamlit.app](https://wheretoliveinlondon.streamlit.app)** and start comparing locations!
 
 ### Running Locally
 
