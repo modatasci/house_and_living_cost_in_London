@@ -159,15 +159,6 @@ housing_in_london/
 - **Rent Prices**: [ONS - Private Rental Market in London (2024-2025)](https://www.ons.gov.uk/economy/inflationandpriceindices/adhocs/2923privaterentalmarketinlondonjuly2024tojune2025)
 - **Postcode Data**: London postcode to borough mapping
 
-## 🔮 Future Enhancements
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment details and future architecture plans including:
-- User authentication and saved preferences
-- Historical price tracking
-- Database integration (PostgreSQL + FastAPI backend)
-- Custom domain support
-- Enhanced analytics and predictive features
-
 ## 📝 Important Notes
 
 - Council tax and rent data are **averages by borough** and for reference only
