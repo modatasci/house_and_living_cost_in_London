@@ -2,7 +2,7 @@
 
 A comprehensive Streamlit web application that helps you make informed decisions about where to live in London by calculating and comparing travel costs, council tax, and rent prices between different postcodes.
 
-**🔗 Live App**: [https://housing-in-london.streamlit.app](https://housing-in-london.streamlit.app)
+**🔗 Live App**: [https://wheretoliveinlondon.streamlit.app](https://wheretoliveinlondon.streamlit.app)
 
 ## Overview
 
