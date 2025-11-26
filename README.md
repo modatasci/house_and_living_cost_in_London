@@ -92,7 +92,7 @@ streamlit run src/app.py
 1. **Enter Postcodes**: Input your home and office/school postcodes in the sidebar
 2. **Set Preferences**:
    - Choose council tax band (A-H)
-   - Select bedroom category for rent
+   - Select bedroom category for rent or enter rent amount manually
    - Set traveling days per week
    - Optional: Adjust journey time (rush hour/off-peak) and transport modes
 3. **Calculate**: Click "Calculate Costs" to see your results
