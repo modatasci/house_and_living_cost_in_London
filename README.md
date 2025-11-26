@@ -176,14 +176,6 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment details and future architectur
 - Fare capping is approximate and may vary by zones
 - Data is current as of 2024-2025 tax year
 
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-- Fork the repository
-- Create a feature branch
-- Make your changes with clear commit messages
-- Test thoroughly
-- Submit a pull request
 
 ## 📄 License
 
