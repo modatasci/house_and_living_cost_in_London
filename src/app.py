@@ -44,17 +44,17 @@ def get_rent_lookup():
     """Initialize and return AverageRentCost instance"""
     return AverageRentCost()
 
-@st.cache_data(ttl=3600, hash_funcs={TravelCalculator: id})  # Cache for 1 hour
-def get_cached_journey_options(calculator, from_postcode, to_postcode, mode=None, journey_preference=None, time=None):
-    """Get journey options with caching to avoid redundant API calls"""
-    kwargs = {}
-    if mode:
-        kwargs['mode'] = mode
-    if journey_preference:
-        kwargs['journey_preference'] = journey_preference
-    if time:
-        kwargs['time'] = time
-    return calculator.get_all_journey_options(from_postcode, to_postcode, **kwargs)
+# @st.cache_data(ttl=3600, hash_funcs={TravelCalculator: id})  # Cache for 1 hour
+# def get_cached_journey_options(calculator, from_postcode, to_postcode, mode=None, journey_preference=None, time=None):
+#     """Get journey options with caching to avoid redundant API calls"""
+#     kwargs = {}
+#     if mode:
+#         kwargs['mode'] = mode
+#     if journey_preference:
+#         kwargs['journey_preference'] = journey_preference
+#     if time:
+#         kwargs['time'] = time
+#     return calculator.get_all_journey_options(from_postcode, to_postcode, **kwargs)
 
 # Initialize calculator in session state
 if 'calculator' not in st.session_state:
