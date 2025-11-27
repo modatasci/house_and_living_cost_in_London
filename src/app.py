@@ -442,9 +442,9 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
             # Council tax band selector
             if st.session_state.council_tax_data:
-                current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
-                    st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
-                )
+                # current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+                #     st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
+                # )
 
                 st.session_state.selected_band = st.selectbox(
                     "Council Tax Band:",
