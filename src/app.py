@@ -44,7 +44,7 @@ def get_rent_lookup():
     """Initialize and return AverageRentCost instance"""
     return AverageRentCost()
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, hash_funcs={TravelCalculator: id})  # Cache for 1 hour
 def get_cached_journey_options(calculator, from_postcode, to_postcode, mode=None, journey_preference=None, time=None):
     """Get journey options with caching to avoid redundant API calls"""
     kwargs = {}
