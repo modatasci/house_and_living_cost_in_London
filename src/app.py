@@ -70,10 +70,10 @@ if 'council_tax_band' not in st.session_state:
     st.session_state.council_tax_band = 'D'
 if 'selected_band' not in st.session_state:
     st.session_state.selected_band = 'D'
-if 'current_band_index' not in st.session_state:
-    st.session_state.current_band_index = 3  # Default to 'D'
-else:
-    st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
+# if 'current_band_index' not in st.session_state:
+#     st.session_state.current_band_index = 3  # Default to 'D'
+# else:
+#     st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -269,7 +269,8 @@ if calculate_button: # On calculate button click
                         'all_bands': council_tax_monthly
                     }
                     st.session_state.selected_band = st.session_state.council_tax_band
-                    st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
+                    # st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
+                    st.session_state.band_selector = st.session_state.council_tax_band
                 else:
                     st.warning(f"Could not find council tax data for postcode: {from_postcode}")
                     st.session_state.council_tax_data = None
