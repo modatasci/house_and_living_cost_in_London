@@ -447,7 +447,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 st.session_state.selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
-                    index=current_band_index,
+                    index=st.current_band_index,
                     key="band_selector",
                     help="Change council tax band to update calculations"
                 )
