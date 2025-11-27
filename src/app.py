@@ -68,6 +68,8 @@ if 'manual_rent_value' not in st.session_state:
     st.session_state.manual_rent_value = 0.0
 if 'council_tax_band' not in st.session_state:
     st.session_state.council_tax_band = 'D'
+if 'selected_band' not in st.session_state:
+    st.session_state.selected_band = 'D'
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -252,6 +254,7 @@ if calculate_button: # On calculate button click
             try:
                 council_tax_lookup = get_council_tax_lookup()
                 council_tax_monthly = council_tax_lookup.calculate_monthly_council_tax(from_postcode)
+                st.session_state.selected_band = st.session_state.council_tax_band
                 # Store council tax data in session state if found
                 if council_tax_monthly:
                     st.session_state.council_tax_data = {
@@ -434,10 +437,10 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             # Council tax band selector
             if st.session_state.council_tax_data:
                 current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
-                    st.session_state.council_tax_data.get('band', 'D')
+                    st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
                 )
 
-                selected_band = st.selectbox(
+                st.session_state.selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
                     index=current_band_index,
@@ -446,11 +449,11 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 )
 
                 # Update council tax data if band changed
-                if selected_band != st.session_state.council_tax_data.get('band'):
+                if st.session_state.selected_band != st.session_state.council_tax_data.get('band'):
                     all_bands = st.session_state.council_tax_data.get('all_bands', {})
-                    monthly_amount = all_bands.get(f'Band {selected_band}', 0)
+                    monthly_amount = all_bands.get(f'Band {st.session_state.selected_band}', 0)
 
-                    st.session_state.council_tax_data['band'] = selected_band
+                    st.session_state.council_tax_data['band'] = st.session_state.selected_band
                     st.session_state.council_tax_data['monthly'] = monthly_amount
                     st.session_state.council_tax_data['annual'] = monthly_amount * 12
                     st.rerun()
@@ -477,7 +480,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                     st.session_state.rent_data['bedroom_category'] = selected_category
                     st.session_state.rent_data['monthly_rent'] = monthly_rent
                     st.session_state.rent_data['annual_rent'] = monthly_rent * 12
-                    st.rerun()
+                    # st.rerun()
     # endregion Journey options and housing selectors
     #-------------------------------------------------------------------------------------------------------------------------
     # region Key metrics
