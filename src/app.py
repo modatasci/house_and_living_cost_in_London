@@ -480,7 +480,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                     st.session_state.rent_data['bedroom_category'] = selected_category
                     st.session_state.rent_data['monthly_rent'] = monthly_rent
                     st.session_state.rent_data['annual_rent'] = monthly_rent * 12
-                    # st.rerun()
+                    st.rerun()
     # endregion Journey options and housing selectors
     #-------------------------------------------------------------------------------------------------------------------------
     # region Key metrics
