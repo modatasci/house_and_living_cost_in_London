@@ -237,13 +237,10 @@ if calculate_button: # On calculate button click
                 kwargs['time'] = time_param
 
             # Fetch journey options (cached)
-            journeys = get_cached_journey_options(
-                st.session_state.calculator,
+            journeys = st.session_state.calculator.get_all_journey_options(
                 from_postcode,
                 to_postcode,
-                mode=mode_param,
-                journey_preference=pref_param,
-                time=time_param
+                **kwargs
             )
 
             # Check if journeys were found
