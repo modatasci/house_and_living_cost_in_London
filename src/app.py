@@ -248,7 +248,7 @@ if calculate_button: # On calculate button click
                 st.session_state.calculator.last_journey = st.session_state.journey_result
                 # Store journey time selection
                 st.session_state.journey_time_label = time_label
-                st.traveling_days_selector = traveling_days_sidebar
+                st.session_state.traveling_days_selector = traveling_days_sidebar
             else:
                 st.error("No journey options found. Please check your postcodes and try again.")
                 st.session_state.journey_result = None
