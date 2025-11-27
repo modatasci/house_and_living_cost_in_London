@@ -66,6 +66,8 @@ if 'manual_rent_enabled' not in st.session_state:
     st.session_state.manual_rent_enabled = False
 if 'manual_rent_value' not in st.session_state:
     st.session_state.manual_rent_value = 0.0
+if 'council_tax_band' not in st.session_state:
+    st.session_state.council_tax_band = 'D'
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -153,12 +155,17 @@ with st.sidebar:
     st.subheader("Housing Details")
 
     # Council Tax Band selector
+    current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+        st.session_state.council_tax_band
+    )
     council_tax_band = st.selectbox(
         "Council Tax Band",
         ["A", "B", "C", "D", "E", "F", "G", "H"],
-        index=3,  # Default to Band D
+        index=current_band_index,
         help="Select your property's council tax band"
     )
+    if council_tax_band != st.session_state.council_tax_band:
+        st.session_state.council_tax_band = council_tax_band
 
     # Manual rent option
     manual_rent_enabled = st.checkbox(
@@ -249,9 +256,9 @@ if calculate_button: # On calculate button click
                 if council_tax_monthly:
                     st.session_state.council_tax_data = {
                         'borough': council_tax_monthly.get('Local authority'),
-                        'band': council_tax_band,
-                        'monthly': council_tax_monthly.get(f'Band {council_tax_band}', 0),
-                        'annual': council_tax_monthly.get(f'Band {council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {council_tax_band}') else 0,
+                        'band': st.session_state.council_tax_band,
+                        'monthly': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0),
+                        'annual': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {st.session_state.council_tax_band}') else 0,
                         'all_bands': council_tax_monthly
                     }
                 else:
