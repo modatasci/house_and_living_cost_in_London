@@ -318,7 +318,7 @@ if calculate_button: # On calculate button click
                 except Exception as e:
                     st.error(f"Error calculating rent: {str(e)}")
                     st.session_state.rent_data = None
-
+        st.rerun()
 # Display results
 if st.session_state.journey_result and st.session_state.journey_result.get('success'):
     journey = st.session_state.journey_result
