@@ -44,6 +44,18 @@ def get_rent_lookup():
     """Initialize and return AverageRentCost instance"""
     return AverageRentCost()
 
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_cached_journey_options(calculator, from_postcode, to_postcode, mode=None, journey_preference=None, time=None):
+    """Get journey options with caching to avoid redundant API calls"""
+    kwargs = {}
+    if mode:
+        kwargs['mode'] = mode
+    if journey_preference:
+        kwargs['journey_preference'] = journey_preference
+    if time:
+        kwargs['time'] = time
+    return calculator.get_all_journey_options(from_postcode, to_postcode, **kwargs)
+
 # Initialize calculator in session state
 if 'calculator' not in st.session_state:
     tfl_key = get_tfl_api_key()
@@ -225,11 +237,14 @@ if calculate_button: # On calculate button click
             if time_param:
                 kwargs['time'] = time_param
 
-            # Fetch journey options
-            journeys = st.session_state.calculator.get_all_journey_options(
+            # Fetch journey options (cached)
+            journeys = get_cached_journey_options(
+                st.session_state.calculator,
                 from_postcode,
                 to_postcode,
-                **kwargs
+                mode=mode_param,
+                journey_preference=pref_param,
+                time=time_param
             )
 
             # Check if journeys were found
