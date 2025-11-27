@@ -195,9 +195,12 @@ with st.sidebar:
     calculate_button = st.button("🔍 Calculate Costs", type="primary", use_container_width=True)
 
 # Main content area
-if calculate_button:
+if calculate_button: # On calculate button click
+    # Validate postcodes
     if not from_postcode or not to_postcode:
         st.error("Please enter both home and office postcodes")
+
+    # Proceed if postcodes are valid
     else:
         with st.spinner("Fetching journey options from TfL..."):
             # Get all journey options
@@ -209,12 +212,14 @@ if calculate_button:
             if time_param:
                 kwargs['time'] = time_param
 
+            # Fetch journey options
             journeys = st.session_state.calculator.get_all_journey_options(
                 from_postcode,
                 to_postcode,
                 **kwargs
             )
 
+            # Check if journeys were found
             if journeys:
                 st.session_state.all_journeys = journeys
                 # Select first journey by default
@@ -240,7 +245,7 @@ if calculate_button:
             try:
                 council_tax_lookup = get_council_tax_lookup()
                 council_tax_monthly = council_tax_lookup.calculate_monthly_council_tax(from_postcode)
-
+                # Store council tax data in session state if found
                 if council_tax_monthly:
                     st.session_state.council_tax_data = {
                         'borough': council_tax_monthly.get('Local authority'),
@@ -418,8 +423,6 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
         # Housing selectors (council tax band and bedroom category)
         if st.session_state.council_tax_data or st.session_state.rent_data:
             st.subheader("Housing Options")
-
-
 
             # Council tax band selector
             if st.session_state.council_tax_data:
