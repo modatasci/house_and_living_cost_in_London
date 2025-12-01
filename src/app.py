@@ -281,6 +281,7 @@ if calculate_button: # On calculate button click
                         'annual': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {st.session_state.council_tax_band}') else 0,
                         'all_bands': council_tax_monthly
                     }
+                    current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_data.get('band', st.session_state.council_tax_band))
                 else:
                     st.warning(f"Could not find council tax data for postcode: {from_postcode}")
                     st.session_state.council_tax_data = None
@@ -302,6 +303,8 @@ if calculate_button: # On calculate button click
                 'all_categories': None,
                 'is_manual': True
             }
+            bedroom_categories = ["Manual Entry"]
+            current_category_index = 1
         else:
             # Use automatic rent lookup
             with st.spinner("Calculating average rent..."):
@@ -325,6 +328,9 @@ if calculate_button: # On calculate button click
                             'all_categories': rent_lookup.get_all_bedroom_categories(from_postcode),
                             'is_manual': False
                         }
+                        bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
+                        current_category = st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
+                        current_category_index = bedroom_categories.index(current_category) if current_category in bedroom_categories else 2
                     else:
                         st.warning(f"Could not find rent data for postcode: {from_postcode}")
                         st.session_state.rent_data = None
@@ -450,9 +456,9 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
             # Council tax band selector
             if st.session_state.council_tax_data:
-                current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
-                    st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
-                )
+                # current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+                #     st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
+                # )
 
                 selected_band = st.selectbox(
                     "Council Tax Band:",
@@ -475,8 +481,9 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             # Bedroom category selector (only show if not using manual rent)
             if st.session_state.rent_data and not st.session_state.rent_data.get('is_manual', False):
                 bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
-                current_category = st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
-                current_category_index = bedroom_categories.index(current_category) if current_category in bedroom_categories else 2
+                current_category_index = bedroom_categories.index(
+                    st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
+                ) if st.session_state.rent_data.get('bedroom_category') in bedroom_categories else 2
 
                 selected_category = st.selectbox(
                     "Bedroom Category:",
@@ -875,10 +882,10 @@ if st.session_state.saved_comparisons:
                 marker=dict(size=12, line=dict(width=1, color='white')),
                 hovertemplate='<br>'.join([
                     '<b>%{customdata[0]}</b>',
-                    'Journey Time: %{x} min',
-                    'Total Monthly: £%{y:.2f}',
                     'From: %{customdata[1]} (%{customdata[3]})',
                     'To: %{customdata[2]} (%{customdata[4]})',
+                    'Journey Time: %{x} min',
+                    'Total Monthly: £%{y:.2f}',
                     'Rent: £%{customdata[5]:.2f}',
                     'Commute: £%{customdata[6]:.2f}',
                     'Council Tax: £%{customdata[7]:.2f}',
