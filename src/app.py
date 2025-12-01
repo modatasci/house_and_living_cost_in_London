@@ -476,7 +476,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                     all_bands = st.session_state.council_tax_data.get('all_bands', {})
                     monthly_amount = all_bands.get(f'Band {st.session_state.selected_band}', 0)
 
-                    st.session_state.council_tax_data['band'] = st.session_state.selected_band
+                    st.session_state.council_tax_data['band'] = selected_band
                     st.session_state.council_tax_data['monthly'] = monthly_amount
                     st.session_state.council_tax_data['annual'] = monthly_amount * 12
                     st.rerun()
