@@ -83,8 +83,8 @@ if 'council_tax_band' not in st.session_state:
     st.session_state.council_tax_band = 'D'
 if 'selected_band' not in st.session_state:
     st.session_state.selected_band = 'D'
-# if 'current_band_index' not in st.session_state:
-#     st.session_state.current_band_index = 3  # Default to 'D'
+if 'current_band_index' not in st.session_state:
+    st.session_state.current_band_index = 3  # Default to 'D'
 # if 'current_category_index' not in st.session_state:
 #     st.session_state.current_category_index = 2  # Default to 'One Bedroom'
 
@@ -469,7 +469,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 st.session_state.selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
-                    index=current_band_index,
+                    index=st.session_state.current_band_index,
                     key="band_selector",
                     help="Change council tax band to update calculations"
                 )
