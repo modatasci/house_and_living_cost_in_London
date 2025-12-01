@@ -281,7 +281,7 @@ if calculate_button: # On calculate button click
                         'annual': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {st.session_state.council_tax_band}') else 0,
                         'all_bands': council_tax_monthly
                     }
-                    # st.session_state.selected_band = st.session_state.council_tax_band
+                    st.session_state.selected_band = st.session_state.council_tax_band
                     # # st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
                     st.session_state.band_selector = st.session_state.council_tax_band
                     # current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
@@ -463,7 +463,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                     st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
                 )
 
-                selected_band = st.selectbox(
+                st.session_state.selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
                     index=current_band_index,
@@ -472,11 +472,11 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 )
 
                 # Update council tax data if band changed
-                if selected_band != st.session_state.council_tax_data.get('band'):
+                if st.session_state.selected_band != st.session_state.council_tax_data.get('band'):
                     all_bands = st.session_state.council_tax_data.get('all_bands', {})
                     monthly_amount = all_bands.get(f'Band {st.session_state.selected_band}', 0)
 
-                    st.session_state.council_tax_data['band'] = selected_band
+                    st.session_state.council_tax_data['band'] = st.session_state.selected_band
                     st.session_state.council_tax_data['monthly'] = monthly_amount
                     st.session_state.council_tax_data['annual'] = monthly_amount * 12
                     st.rerun()
