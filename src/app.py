@@ -333,10 +333,7 @@ if calculate_button: # On calculate button click
                             'all_categories': rent_lookup.get_all_bedroom_categories(from_postcode),
                             'is_manual': False
                         }
-                        bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
-                        st.session_state.current_category_index = bedroom_categories.index(
-                            bedroom_category
-                        ) if bedroom_category in bedroom_categories else 2
+                        st.session_state.category_selector = bedroom_category
                     else:
                         st.warning(f"Could not find rent data for postcode: {from_postcode}")
                         st.session_state.rent_data = None
@@ -462,14 +459,14 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
             # Council tax band selector
             if st.session_state.council_tax_data:
-                # current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
-                #     st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
-                # )
+                current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+                    st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
+                )
 
                 st.session_state.selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
-                    index=st.session_state.current_band_index,
+                    index=current_band_index,
                     key="band_selector",
                     help="Change council tax band to update calculations"
                 )
@@ -477,7 +474,6 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 # Update council tax data if band changed
                 if st.session_state.selected_band != st.session_state.council_tax_data.get('band'):
                     all_bands = st.session_state.council_tax_data.get('all_bands', {})
-                    # monthly_amount = all_bands.get(f'Band {selected_band}', 0)
                     monthly_amount = all_bands.get(f'Band {st.session_state.selected_band}', 0)
 
                     st.session_state.council_tax_data['band'] = st.session_state.selected_band
@@ -488,11 +484,13 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             # Bedroom category selector (only show if not using manual rent)
             if st.session_state.rent_data and not st.session_state.rent_data.get('is_manual', False):
                 bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
+                current_category = st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
+                current_category_index = bedroom_categories.index(current_category) if current_category in bedroom_categories else 2
 
                 selected_category = st.selectbox(
                     "Bedroom Category:",
                     bedroom_categories,
-                    index=st.session_state.get('current_category_index', 2),
+                    index=current_category_index,
                     key="category_selector",
                     help="Change bedroom category to update rent"
                 )
