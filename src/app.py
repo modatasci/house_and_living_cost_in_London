@@ -80,8 +80,8 @@ if 'manual_rent_value' not in st.session_state:
     st.session_state.manual_rent_value = 0.0
 if 'council_tax_band' not in st.session_state:
     st.session_state.council_tax_band = 'D'
-if 'selected_band' not in st.session_state:
-    st.session_state.selected_band = 'D'
+# if 'selected_band' not in st.session_state:
+#     st.session_state.selected_band = 'D'
 # if 'current_band_index' not in st.session_state:
 #     st.session_state.current_band_index = 3  # Default to 'D'
 # else:
