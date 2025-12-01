@@ -12,6 +12,7 @@ from get_living_cost import AverageRentCost
 from post_code_data_processor import get_borough_from_postcode
 from dotenv import load_dotenv
 import os
+import plotly.express as px
 
 # Load environment variables
 load_dotenv()
@@ -280,9 +281,6 @@ if calculate_button: # On calculate button click
                         'annual': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {st.session_state.council_tax_band}') else 0,
                         'all_bands': council_tax_monthly
                     }
-                    st.session_state.selected_band = st.session_state.council_tax_band
-                    # st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
-                    st.session_state.band_selector = st.session_state.council_tax_band
                 else:
                     st.warning(f"Could not find council tax data for postcode: {from_postcode}")
                     st.session_state.council_tax_data = None
@@ -327,7 +325,6 @@ if calculate_button: # On calculate button click
                             'all_categories': rent_lookup.get_all_bedroom_categories(from_postcode),
                             'is_manual': False
                         }
-                        st.session_state.category_selector = bedroom_category
                     else:
                         st.warning(f"Could not find rent data for postcode: {from_postcode}")
                         st.session_state.rent_data = None
@@ -457,7 +454,7 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                     st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
                 )
 
-                st.session_state.selected_band = st.selectbox(
+                selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
                     index=current_band_index,
@@ -466,11 +463,11 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
                 )
 
                 # Update council tax data if band changed
-                if st.session_state.selected_band != st.session_state.council_tax_data.get('band'):
+                if selected_band != st.session_state.council_tax_data.get('band'):
                     all_bands = st.session_state.council_tax_data.get('all_bands', {})
-                    monthly_amount = all_bands.get(f'Band {st.session_state.selected_band}', 0)
+                    monthly_amount = all_bands.get(f'Band {selected_band}', 0)
 
-                    st.session_state.council_tax_data['band'] = st.session_state.selected_band
+                    st.session_state.council_tax_data['band'] = selected_band
                     st.session_state.council_tax_data['monthly'] = monthly_amount
                     st.session_state.council_tax_data['annual'] = monthly_amount * 12
                     st.rerun()
@@ -840,6 +837,73 @@ if st.session_state.saved_comparisons:
         'Saved At'
     ]
     df = df[column_order]
+
+    # Show scatter plot if there are 2 or more comparisons
+    if len(st.session_state.saved_comparisons) >= 2:
+        st.markdown("### 📈 Journey Time vs Total Monthly Cost")
+
+        # Center the plot using columns
+        col1, col2, col3 = st.columns([1, 3, 1])
+
+        with col2:
+            # Create scatter plot
+            fig = px.scatter(
+                df,
+                x='Journey Time (min)',
+                y='Total Monthly (£)',
+                hover_data={
+                    'Name': True,
+                    'From Postcode': True,
+                    'To Postcode': True,
+                    'From Borough': True,
+                    'To Borough': True,
+                    'Monthly Rent (£)': ':.2f',
+                    'Monthly Commute (£)': ':.2f',
+                    'Monthly Council Tax (£)': ':.2f',
+                    'Journey Time (min)': False,  # Already on axis
+                    'Total Monthly (£)': False     # Already on axis
+                },
+                labels={
+                    'Journey Time (min)': 'Journey Time (minutes)',
+                    'Total Monthly (£)': 'Total Monthly Cost (£)'
+                },
+                title='Journey Time vs Total Monthly Cost'
+            )
+
+            # Customize marker appearance
+            fig.update_traces(
+                marker=dict(size=12, line=dict(width=1, color='white')),
+                hovertemplate='<br>'.join([
+                    '<b>%{customdata[0]}</b>',
+                    'Journey Time: %{x} min',
+                    'Total Monthly: £%{y:.2f}',
+                    'From: %{customdata[1]} (%{customdata[3]})',
+                    'To: %{customdata[2]} (%{customdata[4]})',
+                    'Rent: £%{customdata[5]:.2f}',
+                    'Commute: £%{customdata[6]:.2f}',
+                    'Council Tax: £%{customdata[7]:.2f}',
+                    '<extra></extra>'
+                ])
+            )
+
+            # Update layout
+            min_journey_time = df['Journey Time (min)'].min()
+            max_journey_time = df['Journey Time (min)'].max()
+            x_range = [min(30, min_journey_time), max(90, max_journey_time)]
+            min_monthly_cost = df['Total Monthly (£)'].min()
+            max_monthly_cost = df['Total Monthly (£)'].max()
+            y_range = [min(800, min_monthly_cost), max(3000, max_monthly_cost)]
+
+            fig.update_layout(
+                height=500,
+                hovermode='closest',
+                xaxis=dict(range=x_range),
+                yaxis=dict(range=y_range)
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("---")
 
     # Display the dataframe
     st.dataframe(
