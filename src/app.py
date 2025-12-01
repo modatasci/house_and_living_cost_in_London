@@ -81,10 +81,12 @@ if 'manual_rent_value' not in st.session_state:
     st.session_state.manual_rent_value = 0.0
 if 'council_tax_band' not in st.session_state:
     st.session_state.council_tax_band = 'D'
-if 'current_band_index' not in st.session_state:
-    st.session_state.current_band_index = 3  # Default to 'D'
-if 'current_category_index' not in st.session_state:
-    st.session_state.current_category_index = 2  # Default to 'One Bedroom'
+if 'selected_band' not in st.session_state:
+    st.session_state.selected_band = 'D'
+# if 'current_band_index' not in st.session_state:
+#     st.session_state.current_band_index = 3  # Default to 'D'
+# if 'current_category_index' not in st.session_state:
+#     st.session_state.current_category_index = 2  # Default to 'One Bedroom'
 
 # Title and description
 st.title("🏠 Where to live in London?")
@@ -279,9 +281,9 @@ if calculate_button: # On calculate button click
                         'annual': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {st.session_state.council_tax_band}') else 0,
                         'all_bands': council_tax_monthly
                     }
-                    st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
-                        st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
-                    )
+                    # st.session_state.selected_band = st.session_state.council_tax_band
+                    # # st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_band)
+                    # st.session_state.band_selector = st.session_state.council_tax_band
                 else:
                     st.warning(f"Could not find council tax data for postcode: {from_postcode}")
                     st.session_state.council_tax_data = None
@@ -457,10 +459,14 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
             # Council tax band selector
             if st.session_state.council_tax_data:
+                current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+                    st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
+                )
+
                 selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
-                    index=st.session_state.get('current_band_index', 3),
+                    index=current_band_index,
                     key="band_selector",
                     help="Change council tax band to update calculations"
                 )
