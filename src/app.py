@@ -281,7 +281,9 @@ if calculate_button: # On calculate button click
                         'annual': council_tax_monthly.get(f'Band {st.session_state.council_tax_band}', 0) * 12 if council_tax_monthly.get(f'Band {st.session_state.council_tax_band}') else 0,
                         'all_bands': council_tax_monthly
                     }
-                    current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(st.session_state.council_tax_data.get('band', st.session_state.council_tax_band))
+                    st.session_state.current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
+                        st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
+                    )
                 else:
                     st.warning(f"Could not find council tax data for postcode: {from_postcode}")
                     st.session_state.council_tax_data = None
@@ -329,8 +331,9 @@ if calculate_button: # On calculate button click
                             'is_manual': False
                         }
                         bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
-                        current_category = st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
-                        current_category_index = bedroom_categories.index(current_category) if current_category in bedroom_categories else 2
+                        st.session_state.current_category_index = bedroom_categories.index(
+                            bedroom_category
+                        ) if bedroom_category in bedroom_categories else 2
                     else:
                         st.warning(f"Could not find rent data for postcode: {from_postcode}")
                         st.session_state.rent_data = None
@@ -456,14 +459,10 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
 
             # Council tax band selector
             if st.session_state.council_tax_data:
-                # current_band_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].index(
-                #     st.session_state.council_tax_data.get('band', st.session_state.council_tax_band)
-                # )
-
                 selected_band = st.selectbox(
                     "Council Tax Band:",
                     ["A", "B", "C", "D", "E", "F", "G", "H"],
-                    index=current_band_index,
+                    index=st.session_state.get('current_band_index', 3),
                     key="band_selector",
                     help="Change council tax band to update calculations"
                 )
@@ -481,14 +480,11 @@ if st.session_state.journey_result and st.session_state.journey_result.get('succ
             # Bedroom category selector (only show if not using manual rent)
             if st.session_state.rent_data and not st.session_state.rent_data.get('is_manual', False):
                 bedroom_categories = ["Room", "Studio", "One Bedroom", "Two Bedrooms", "Three Bedrooms", "Four or More Bedrooms"]
-                current_category_index = bedroom_categories.index(
-                    st.session_state.rent_data.get('bedroom_category', 'One Bedroom')
-                ) if st.session_state.rent_data.get('bedroom_category') in bedroom_categories else 2
 
                 selected_category = st.selectbox(
                     "Bedroom Category:",
                     bedroom_categories,
-                    index=current_category_index,
+                    index=st.session_state.get('current_category_index', 2),
                     key="category_selector",
                     help="Change bedroom category to update rent"
                 )
