@@ -68,9 +68,10 @@ Simply visit **[https://wheretoliveinlondon.streamlit.app](https://wheretolivein
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/housing_in_london.git
+git clone https://github.com/modatasci/house_and_living_cost_in_London.git
 cd housing_in_london
 ```
+
 
 2. Install dependencies:
 ```bash
