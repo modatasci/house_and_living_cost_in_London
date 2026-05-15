@@ -1,0 +1,11 @@
+name = "housing-in-london"
+compatibility_date = "2025-05-01"
+pages_build_output_dir = "dist"
+
+# Cloudflare D1 — feature-vote storage for the "Future Work" section.
+# For local dev (`wrangler pages dev`) the database_id is unused; replace it
+# with the real id from `wrangler d1 create housing_votes` before deploying.
+[[d1_databases]]
+binding = "DB"
+database_name = "housing_votes"
+database_id = "0796c6c0-d860-4b55-ac96-429c40e15203"

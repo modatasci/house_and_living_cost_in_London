@@ -1,0 +1,36 @@
+# Fly.io config for the Housing in London API.
+# Deploy from the REPO ROOT so the Dockerfile can COPY data/ into the image:
+#
+#   fly launch --no-deploy --copy-config --config v2/api/fly.toml \
+#              --dockerfile v2/api/Dockerfile
+#   fly secrets set TFL_APP_KEY=...
+#   fly deploy --config v2/api/fly.toml --dockerfile v2/api/Dockerfile
+
+app = "housing-in-london-api"
+primary_region = "lhr"  # London
+
+[build]
+  dockerfile = "v2/api/Dockerfile"
+
+[env]
+  CORS_ORIGINS = "https://housing-in-london.pages.dev,http://localhost:5173"
+  DATA_DIR = "/srv/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
