@@ -1,0 +1,35 @@
+[project]
+name = "housing-in-london-api"
+version = "0.1.0"
+description = "FastAPI backend for the Housing in London v2 web app"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "httpx>=0.27",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "scipy>=1.13",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.4",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "ruff>=0.6",
+]
+build = [
+  "geopandas>=0.14",
+  "pyproj>=3.6",
+  "pyarrow>=16.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
